@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { controlsFromStick, stickFromDrag } from './index'
+import { controlsFromStick, controlsFromTouch, stickFromDrag } from './index'
 
 describe('controlsFromStick', () => {
   it('sails forward when the drag points the way the ship already faces', () => {
@@ -8,6 +8,8 @@ describe('controlsFromStick', () => {
       left: false,
       right: false,
       fire: false,
+      fireLeft: false,
+      fireRight: false,
     })
   })
 
@@ -17,6 +19,8 @@ describe('controlsFromStick', () => {
       left: false,
       right: true,
       fire: false,
+      fireLeft: false,
+      fireRight: false,
     })
   })
 
@@ -26,6 +30,8 @@ describe('controlsFromStick', () => {
       left: true,
       right: false,
       fire: false,
+      fireLeft: false,
+      fireRight: false,
     })
   })
 
@@ -35,6 +41,23 @@ describe('controlsFromStick', () => {
       left: false,
       right: false,
       fire: false,
+      fireLeft: false,
+      fireRight: false,
+    })
+  })
+})
+
+describe('controlsFromTouch', () => {
+  it('copies the side buttons and leaves them off for the stick alone', () => {
+    expect(
+      controlsFromTouch(0, { stick: { x: 0, y: -1 }, fire: false, fireLeft: true, fireRight: false }),
+    ).toEqual({
+      forward: true,
+      left: false,
+      right: false,
+      fire: false,
+      fireLeft: true,
+      fireRight: false,
     })
   })
 })

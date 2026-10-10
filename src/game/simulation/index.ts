@@ -10,6 +10,7 @@ import type { Enemy } from '../../types/enemy'
 import type { HeldControls, MatchSnapshot } from '../../types/game'
 import type { Projectile } from '../../types/projectile'
 import type { Ship } from '../../types/ship'
+import { sideVolley } from '../broadside'
 import { circleHitsRect, circlesOverlap, clampToArena } from '../collision'
 
 export type MatchSeed = {
@@ -60,7 +61,7 @@ export function createMatch(seed?: MatchSeed): Match {
   let remainingSeconds: number = GAME_CONFIG.matchSeconds
   let phase: MatchSnapshot['phase'] = 'playing'
   let endReason: MatchSnapshot['endReason'] = null
-  let cooldown = 0
+  const cooldown = { front: 0, left: 0, right: 0 }
   let nextId = 2
   const listeners = new Set<(snapshot: MatchSnapshot) => void>()
   let notified = ''
@@ -125,22 +126,57 @@ export function createMatch(seed?: MatchSeed): Match {
       tryMove(ship, ship.x + aim.x * GAME_CONFIG.shipSpeed * dt, ship.y + aim.y * GAME_CONFIG.shipSpeed * dt)
     }
 
-    cooldown = Math.max(0, cooldown - dt)
-    if (controls.fire && cooldown === 0 && projectiles.length === 0) {
-      const aim = facing(ship.rotation)
+    cooldown.front = Math.max(0, cooldown.front - dt)
+    cooldown.left = Math.max(0, cooldown.left - dt)
+    cooldown.right = Math.max(0, cooldown.right - dt)
+
+    const weaponReady = (weapon: Projectile['weapon']) =>
+      cooldown[weapon] === 0 && projectiles.every((shot) => shot.weapon !== weapon)
+
+    const pushShot = (weapon: Projectile['weapon'], x: number, y: number, vx: number, vy: number) => {
       projectiles.push({
         id: nextId,
-        x: ship.x + aim.x * (ship.radius + 8),
-        y: ship.y + aim.y * (ship.radius + 8),
-        vx: aim.x * GAME_CONFIG.projectileSpeed,
-        vy: aim.y * GAME_CONFIG.projectileSpeed,
+        x,
+        y,
+        vx,
+        vy,
         radius: GAME_CONFIG.projectileRadius,
         damage: GAME_CONFIG.shotDamage,
+        weapon,
       })
       nextId += 1
-      cooldown = GAME_CONFIG.shotCooldownSeconds
     }
 
+    if (controls.fire && weaponReady('front')) {
+      const aim = facing(ship.rotation)
+      const muzzle = ship.radius + 8
+      pushShot(
+        'front',
+        ship.x + aim.x * muzzle,
+        ship.y + aim.y * muzzle,
+        aim.x * GAME_CONFIG.projectileSpeed,
+        aim.y * GAME_CONFIG.projectileSpeed,
+      )
+      cooldown.front = GAME_CONFIG.shotCooldownSeconds
+    }
+    for (const side of ['left', 'right'] as const) {
+      const held = side === 'left' ? controls.fireLeft : controls.fireRight
+      if (!held || !weaponReady(side)) continue
+      for (const shot of sideVolley({
+        x: ship.x,
+        y: ship.y,
+        rotation: ship.rotation,
+        side,
+        muzzle: ship.radius + 8,
+        spread: 16,
+        speed: GAME_CONFIG.projectileSpeed,
+      })) {
+        pushShot(side, shot.x, shot.y, shot.vx, shot.vy)
+      }
+      cooldown[side] = GAME_CONFIG.shotCooldownSeconds
+    }
+
+    const chaserWasAlive = chaser.alive
     for (let i = projectiles.length - 1; i >= 0; i -= 1) {
       const shot = projectiles[i]
       shot.x += shot.vx * dt
@@ -148,15 +184,16 @@ export function createMatch(seed?: MatchSeed): Match {
       const outside =
         shot.x < 0 || shot.y < 0 || shot.x > ARENA_WIDTH || shot.y > ARENA_HEIGHT
       const hitIsland = circleHitsRect(shot, ISLAND)
-      const hitChaser =
-        chaser.alive &&
-        circlesOverlap(shot, chaser)
+      const hitChaser = chaserWasAlive && circlesOverlap(shot, chaser)
       if (hitChaser) {
+        const hadHealth = chaser.health > 0
         chaser.health -= shot.damage
-        if (chaser.health <= 0) {
+        if (hadHealth && chaser.health <= 0) {
           chaser.alive = false
           chaser.health = 0
           score += 1
+        } else if (chaser.health < 0) {
+          chaser.health = 0
         }
       }
       if (outside || hitIsland || hitChaser) projectiles.splice(i, 1)

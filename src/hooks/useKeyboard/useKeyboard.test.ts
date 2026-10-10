@@ -9,6 +9,8 @@ describe('controlsFromKeys', () => {
       left: true,
       right: false,
       fire: true,
+      fireLeft: false,
+      fireRight: false,
     })
   })
 
@@ -19,6 +21,19 @@ describe('controlsFromKeys', () => {
       left: false,
       right: true,
       fire: false,
+      fireLeft: false,
+      fireRight: false,
+    })
+  })
+
+  it('maps Q and E to the side cannons', () => {
+    expect(controlsFromKeys(new Set(['KeyQ', 'KeyE']))).toEqual({
+      forward: false,
+      left: false,
+      right: false,
+      fire: false,
+      fireLeft: true,
+      fireRight: true,
     })
   })
 })
@@ -27,14 +42,16 @@ describe('mergeControls', () => {
   it('keeps a command held by only one source', () => {
     expect(
       mergeControls(
-        { forward: true, left: false, right: false, fire: false },
-        { forward: false, left: true, right: false, fire: true },
+        { forward: true, left: false, right: false, fire: false, fireLeft: true, fireRight: false },
+        { forward: false, left: true, right: false, fire: true, fireLeft: false, fireRight: true },
       ),
     ).toEqual({
       forward: true,
       left: true,
       right: false,
       fire: true,
+      fireLeft: true,
+      fireRight: true,
     })
   })
 })

@@ -1,3 +1,5 @@
+export type Weapon = 'front' | 'left' | 'right'
+
 export type Projectile = {
   id: number
   x: number
@@ -6,4 +8,5 @@ export type Projectile = {
   vy: number
   radius: number
   damage: number
+  weapon: Weapon
 }

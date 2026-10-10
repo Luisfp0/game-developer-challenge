@@ -2,7 +2,14 @@ import { describe, expect, it } from 'vitest'
 import { ARENA_HEIGHT, ARENA_WIDTH, ISLAND, PLAYER_START } from '../../constants/gameConfig'
 import { createMatch } from './index'
 
-const idle = { forward: false, left: false, right: false, fire: false }
+const idle = {
+  forward: false,
+  left: false,
+  right: false,
+  fire: false,
+  fireLeft: false,
+  fireRight: false,
+}
 
 describe('movement', () => {
   it('sails upward when rotation is 0', () => {

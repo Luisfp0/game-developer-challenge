@@ -10,6 +10,8 @@ export type HeldControls = {
   left: boolean
   right: boolean
   fire: boolean
+  fireLeft: boolean
+  fireRight: boolean
 }
 
 export type Island = {

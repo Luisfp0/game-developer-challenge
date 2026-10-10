@@ -5,6 +5,8 @@ export type Stick = { x: number; y: number }
 export type TouchInput = {
   stick: Stick | null
   fire: boolean
+  fireLeft: boolean
+  fireRight: boolean
 }
 
 const EMPTY: HeldControls = {
@@ -12,6 +14,8 @@ const EMPTY: HeldControls = {
   left: false,
   right: false,
   fire: false,
+  fireLeft: false,
+  fireRight: false,
 }
 
 const DRAG_DEAD_ZONE = 0.15
@@ -43,9 +47,16 @@ export function controlsFromStick(shipRotation: number, stick: Stick | null): He
     left: delta < -ALIGNED,
     right: delta > ALIGNED,
     fire: false,
+    fireLeft: false,
+    fireRight: false,
   }
 }
 
 export function controlsFromTouch(shipRotation: number, input: TouchInput): HeldControls {
-  return { ...controlsFromStick(shipRotation, input.stick), fire: input.fire }
+  return {
+    ...controlsFromStick(shipRotation, input.stick),
+    fire: input.fire,
+    fireLeft: input.fireLeft,
+    fireRight: input.fireRight,
+  }
 }

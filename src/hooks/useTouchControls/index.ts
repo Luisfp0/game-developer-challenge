@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Stick, TouchInput } from '../../game/touch'
 
-const EMPTY: TouchInput = { stick: null, fire: false }
+const EMPTY: TouchInput = { stick: null, fire: false, fireLeft: false, fireRight: false }
 
 export const TOUCH_MAX_WIDTH_PX = 768
 
@@ -10,6 +10,8 @@ export function useTouchControls(pausedRef: { current: boolean }): {
   clear: () => void
   setStick: (stick: Stick | null) => void
   setFire: (held: boolean) => void
+  setFireLeft: (held: boolean) => void
+  setFireRight: (held: boolean) => void
   narrow: boolean
 } {
   const input = useRef<TouchInput>({ ...EMPTY })
@@ -45,6 +47,28 @@ export function useTouchControls(pausedRef: { current: boolean }): {
     [pausedRef],
   )
 
+  const setFireLeft = useCallback(
+    (held: boolean) => {
+      if (pausedRef.current || !narrowRef.current) {
+        input.current = { ...EMPTY }
+        return
+      }
+      input.current = { ...input.current, fireLeft: held }
+    },
+    [pausedRef],
+  )
+
+  const setFireRight = useCallback(
+    (held: boolean) => {
+      if (pausedRef.current || !narrowRef.current) {
+        input.current = { ...EMPTY }
+        return
+      }
+      input.current = { ...input.current, fireRight: held }
+    },
+    [pausedRef],
+  )
+
   useEffect(() => {
     const query = window.matchMedia(`(max-width: ${TOUCH_MAX_WIDTH_PX}px)`)
     const onChange = () => {
@@ -59,5 +83,5 @@ export function useTouchControls(pausedRef: { current: boolean }): {
     if (!narrow) clear()
   }, [narrow, clear])
 
-  return { input, clear, setStick, setFire, narrow }
+  return { input, clear, setStick, setFire, setFireLeft, setFireRight, narrow }
 }

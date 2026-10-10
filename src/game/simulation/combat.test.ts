@@ -2,7 +2,14 @@ import { describe, expect, it } from 'vitest'
 import { GAME_CONFIG, ISLAND, PLAYER_START } from '../../constants/gameConfig'
 import { createMatch } from './index'
 
-const idle = { forward: false, left: false, right: false, fire: false }
+const idle = {
+  forward: false,
+  left: false,
+  right: false,
+  fire: false,
+  fireLeft: false,
+  fireRight: false,
+}
 
 describe('combat', () => {
   it('ends by time without moving the world', () => {
@@ -75,5 +82,45 @@ describe('combat', () => {
     match.update(0.016, { ...idle, fire: true })
     match.update(GAME_CONFIG.shotCooldownSeconds, { ...idle, fire: true })
     expect(match.snapshot().projectiles).toHaveLength(1)
+  })
+
+  it('fires the front shot and a left volley together', () => {
+    const match = createMatch({
+      ship: { x: 200, y: 400, rotation: 0 },
+      chaser: { x: 800, y: 100 },
+    })
+    const snap = match.update(0.016, { ...idle, fire: true, fireLeft: true })
+    const left = snap.projectiles.filter((shot) => shot.weapon === 'left')
+    expect(snap.projectiles).toHaveLength(4)
+    expect(left).toHaveLength(3)
+    expect(new Set(left.map((shot) => shot.vx)).size).toBe(1)
+    expect(new Set(left.map((shot) => shot.y)).size).toBe(3)
+  })
+
+  it('does not fire the same side again while its balls are still in the air', () => {
+    const match = createMatch({
+      ship: { x: 200, y: 400, rotation: 0 },
+      chaser: { x: 800, y: 100 },
+    })
+    match.update(0.016, { ...idle, fireLeft: true })
+    for (let step = 0; step < 9; step += 1) match.update(0.05, idle)
+    const before = match.snapshot().projectiles.filter((shot) => shot.weapon === 'left')
+    expect(before.length).toBeGreaterThan(0)
+    match.update(0.016, { ...idle, fireLeft: true })
+    const after = match.snapshot().projectiles.filter((shot) => shot.weapon === 'left')
+    expect(after).toHaveLength(before.length)
+  })
+
+  it('counts every ball of a volley that hits in the same frame', () => {
+    const match = createMatch({
+      ship: { x: 200, y: 400, rotation: 0 },
+      chaser: { x: 164, y: 400 },
+    })
+    const snap = match.update(0.016, { ...idle, fireLeft: true })
+    expect(snap.projectiles).toHaveLength(0)
+    expect(snap.enemies[0].health).toBe(0)
+    expect(snap.enemies[0].alive).toBe(false)
+    expect(snap.score).toBe(1)
+    expect(snap.phase).toBe('playing')
   })
 })

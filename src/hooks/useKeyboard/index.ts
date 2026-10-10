@@ -6,6 +6,8 @@ const EMPTY: HeldControls = {
   left: false,
   right: false,
   fire: false,
+  fireLeft: false,
+  fireRight: false,
 }
 
 export function controlsFromKeys(keys: Set<string>): HeldControls {
@@ -14,6 +16,8 @@ export function controlsFromKeys(keys: Set<string>): HeldControls {
     left: keys.has('KeyA') || keys.has('ArrowLeft'),
     right: keys.has('KeyD') || keys.has('ArrowRight'),
     fire: keys.has('Space'),
+    fireLeft: keys.has('KeyQ'),
+    fireRight: keys.has('KeyE'),
   }
 }
 
@@ -23,6 +27,8 @@ export function mergeControls(keyboard: HeldControls, touch: HeldControls): Held
     left: keyboard.left || touch.left,
     right: keyboard.right || touch.right,
     fire: keyboard.fire || touch.fire,
+    fireLeft: keyboard.fireLeft || touch.fireLeft,
+    fireRight: keyboard.fireRight || touch.fireRight,
   }
 }
 
