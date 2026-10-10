@@ -1,3 +1,4 @@
+import type { TouchInput } from '../../game/touch'
 import type { HeldControls, MatchSnapshot } from '../../types/game'
 
 export type GameCanvasProps = {
@@ -5,5 +6,5 @@ export type GameCanvasProps = {
   onLoadError: (message: string) => void
   pausedRef: { current: boolean }
   keyboardRef: { current: HeldControls }
-  touchRef: { current: HeldControls }
+  touchRef: { current: TouchInput }
 }

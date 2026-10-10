@@ -63,13 +63,13 @@ export function MatchPage({ score, remainingSeconds, onSnapshot, onLoadError }: 
         onLoadError={onLoadError}
         pausedRef={pausedRef}
         keyboardRef={keyboard.controls}
-        touchRef={touch.controls}
+        touchRef={touch.input}
       />
       <Hud score={score} remainingSeconds={remainingSeconds} />
       <button type="button" onClick={() => pauseRef.current()} style={{ position: 'absolute', top: 12, right: 12, zIndex: 2 }}>
         Pause
       </button>
-      {touch.narrow ? <TouchControls onHold={touch.setHeld} /> : null}
+      {touch.narrow ? <TouchControls onStick={touch.setStick} onFire={touch.setFire} /> : null}
       {paused ? <PauseOverlay onResume={resume} /> : null}
     </div>
   )

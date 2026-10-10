@@ -1,44 +1,110 @@
-import type { MouseEvent, PointerEvent } from 'react'
-import type { HeldControls } from '../../types/game'
+import { useRef, useState } from 'react'
+import type { PointerEvent } from 'react'
+import { stickFromDrag } from '../../game/touch'
 import type { TouchControlsProps } from './types'
 
-const buttonStyle = {
+const PAD = 132
+const KNOB = 52
+const RADIUS = 40
+
+const fireStyle = {
   minWidth: 76,
   minHeight: 56,
   touchAction: 'none' as const,
   userSelect: 'none' as const,
 }
 
-function holdHandlers(action: keyof HeldControls, onHold: TouchControlsProps['onHold']) {
-  const release = () => onHold(action, false)
-  return {
-    onPointerDown: (event: PointerEvent<HTMLButtonElement>) => {
-      event.preventDefault()
-      onHold(action, true)
-    },
-    onPointerUp: release,
-    onPointerCancel: release,
-    onPointerLeave: release,
-    onContextMenu: (event: MouseEvent<HTMLButtonElement>) => event.preventDefault(),
-  }
-}
+export function TouchControls({ onStick, onFire }: TouchControlsProps) {
+  const padRef = useRef<HTMLDivElement>(null)
+  const [knob, setKnob] = useState({ x: 0, y: 0 })
 
-export function TouchControls({ onHold }: TouchControlsProps) {
+  function pointFrom(event: PointerEvent<HTMLDivElement>) {
+    const pad = padRef.current
+    if (!pad) return
+    const box = pad.getBoundingClientRect()
+    const dx = event.clientX - (box.left + box.width / 2)
+    const dy = event.clientY - (box.top + box.height / 2)
+    const distance = Math.hypot(dx, dy)
+    const reach = Math.min(distance, RADIUS)
+    const scale = distance === 0 ? 0 : reach / distance
+    setKnob({ x: dx * scale, y: dy * scale })
+    onStick(stickFromDrag(dx, dy, RADIUS))
+  }
+
+  function releaseStick() {
+    setKnob({ x: 0, y: 0 })
+    onStick(null)
+  }
+
+  function releaseFire() {
+    onFire(false)
+  }
+
   return (
     <div style={{ position: 'absolute', inset: 0, zIndex: 2, pointerEvents: 'none' }}>
-      <div style={{ position: 'absolute', left: 12, bottom: 12, display: 'flex', gap: 8, pointerEvents: 'auto' }}>
-        <button type="button" style={buttonStyle} {...holdHandlers('left', onHold)}>
-          Left
-        </button>
-        <button type="button" style={buttonStyle} {...holdHandlers('forward', onHold)}>
-          Forward
-        </button>
-        <button type="button" style={buttonStyle} {...holdHandlers('right', onHold)}>
-          Right
-        </button>
+      <div
+        ref={padRef}
+        aria-label="Steer"
+        aria-valuemax={1}
+        aria-valuemin={-1}
+        aria-valuenow={0}
+        role="slider"
+        tabIndex={0}
+        style={{
+          position: 'absolute',
+          left: 16,
+          bottom: 16,
+          width: PAD,
+          height: PAD,
+          borderRadius: '50%',
+          background: 'rgba(244, 239, 228, 0.16)',
+          border: '2px solid rgba(244, 239, 228, 0.45)',
+          touchAction: 'none',
+          pointerEvents: 'auto',
+        }}
+        onPointerDown={(event) => {
+          event.preventDefault()
+          event.currentTarget.setPointerCapture(event.pointerId)
+          pointFrom(event)
+        }}
+        onPointerMove={(event) => {
+          if (!event.currentTarget.hasPointerCapture(event.pointerId)) return
+          pointFrom(event)
+        }}
+        onPointerUp={(event) => {
+          if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+            event.currentTarget.releasePointerCapture(event.pointerId)
+          }
+          releaseStick()
+        }}
+        onPointerCancel={releaseStick}
+      >
+        <div
+          style={{
+            position: 'absolute',
+            width: KNOB,
+            height: KNOB,
+            borderRadius: '50%',
+            left: (PAD - KNOB) / 2 + knob.x,
+            top: (PAD - KNOB) / 2 + knob.y,
+            background: 'rgba(244, 239, 228, 0.9)',
+            pointerEvents: 'none',
+          }}
+        />
       </div>
-      <div style={{ position: 'absolute', right: 12, bottom: 12, pointerEvents: 'auto' }}>
-        <button type="button" style={buttonStyle} {...holdHandlers('fire', onHold)}>
+      <div style={{ position: 'absolute', right: 16, bottom: 16, pointerEvents: 'auto' }}>
+        <button
+          type="button"
+          style={fireStyle}
+          onPointerDown={(event) => {
+            event.preventDefault()
+            onFire(true)
+          }}
+          onPointerUp={releaseFire}
+          onPointerCancel={releaseFire}
+          onPointerLeave={releaseFire}
+          onContextMenu={(event) => event.preventDefault()}
+        >
           Fire
         </button>
       </div>

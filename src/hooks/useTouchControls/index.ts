@@ -1,22 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { HeldControls } from '../../types/game'
+import type { Stick, TouchInput } from '../../game/touch'
 
-const EMPTY: HeldControls = {
-  forward: false,
-  left: false,
-  right: false,
-  fire: false,
-}
+const EMPTY: TouchInput = { stick: null, fire: false }
 
 export const TOUCH_MAX_WIDTH_PX = 768
 
 export function useTouchControls(pausedRef: { current: boolean }): {
-  controls: { current: HeldControls }
+  input: { current: TouchInput }
   clear: () => void
-  setHeld: (action: keyof HeldControls, held: boolean) => void
+  setStick: (stick: Stick | null) => void
+  setFire: (held: boolean) => void
   narrow: boolean
 } {
-  const controls = useRef<HeldControls>({ ...EMPTY })
+  const input = useRef<TouchInput>({ ...EMPTY })
   const [narrow, setNarrow] = useState(
     () => window.matchMedia(`(max-width: ${TOUCH_MAX_WIDTH_PX}px)`).matches,
   )
@@ -24,16 +20,27 @@ export function useTouchControls(pausedRef: { current: boolean }): {
   narrowRef.current = narrow
 
   const clear = useCallback(() => {
-    controls.current = { ...EMPTY }
+    input.current = { ...EMPTY }
   }, [])
 
-  const setHeld = useCallback(
-    (action: keyof HeldControls, held: boolean) => {
+  const setStick = useCallback(
+    (stick: Stick | null) => {
       if (pausedRef.current || !narrowRef.current) {
-        controls.current = { ...EMPTY }
+        input.current = { ...EMPTY }
         return
       }
-      controls.current = { ...controls.current, [action]: held }
+      input.current = { ...input.current, stick }
+    },
+    [pausedRef],
+  )
+
+  const setFire = useCallback(
+    (held: boolean) => {
+      if (pausedRef.current || !narrowRef.current) {
+        input.current = { ...EMPTY }
+        return
+      }
+      input.current = { ...input.current, fire: held }
     },
     [pausedRef],
   )
@@ -52,5 +59,5 @@ export function useTouchControls(pausedRef: { current: boolean }): {
     if (!narrow) clear()
   }, [narrow, clear])
 
-  return { controls, clear, setHeld, narrow }
+  return { input, clear, setStick, setFire, narrow }
 }

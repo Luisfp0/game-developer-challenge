@@ -1,5 +1,6 @@
-import type { HeldControls } from '../../types/game'
+import type { Stick } from '../../game/touch'
 
 export type TouchControlsProps = {
-  onHold: (action: keyof HeldControls, held: boolean) => void
+  onStick: (stick: Stick | null) => void
+  onFire: (held: boolean) => void
 }

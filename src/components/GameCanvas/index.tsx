@@ -3,6 +3,7 @@ import { Application, Assets, Container, Graphics, Sprite, Texture } from 'pixi.
 import { ASSET_URLS } from '../../constants/assets'
 import { ARENA_HEIGHT, ARENA_WIDTH, TILE_SIZE } from '../../constants/gameConfig'
 import { appliedSeconds } from '../../game/pause'
+import { controlsFromTouch } from '../../game/touch'
 import { createMatch } from '../../game/simulation'
 import { mergeControls } from '../../hooks/useKeyboard'
 import type { MatchSnapshot } from '../../types/game'
@@ -176,7 +177,8 @@ export function GameCanvas({ onSnapshot, onLoadError, pausedRef, keyboardRef, to
       const tick = () => {
         const seconds = appliedSeconds(next.ticker.deltaMS / 1000, pausedRef.current || document.hidden)
         if (seconds === 0) return
-        const snap = match.update(seconds, mergeControls(keyboardRef.current, touchRef.current))
+        const touch = controlsFromTouch(match.snapshot().ship.rotation, touchRef.current)
+        const snap = match.update(seconds, mergeControls(keyboardRef.current, touch))
         draw(snap)
       }
       next.ticker.add(tick)
