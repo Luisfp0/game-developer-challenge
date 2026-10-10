@@ -2,8 +2,9 @@ import { useEffect, useRef } from 'react'
 import { Application, Assets, Container, Graphics, Sprite, Texture } from 'pixi.js'
 import { ASSET_URLS } from '../../constants/assets'
 import { ARENA_HEIGHT, ARENA_WIDTH, TILE_SIZE } from '../../constants/gameConfig'
+import { appliedSeconds } from '../../game/pause'
 import { createMatch } from '../../game/simulation'
-import { useKeyboard } from '../../hooks/useKeyboard'
+import { mergeControls } from '../../hooks/useKeyboard'
 import type { MatchSnapshot } from '../../types/game'
 import type { GameCanvasProps } from './types'
 
@@ -66,9 +67,8 @@ function healthBar(frame: Texture, fill: Texture): HealthBar {
   return { view, width: frame.width * BAR_SCALE, setRatio }
 }
 
-export function GameCanvas({ onSnapshot, onLoadError }: GameCanvasProps) {
+export function GameCanvas({ onSnapshot, onLoadError, pausedRef, keyboardRef, touchRef }: GameCanvasProps) {
   const hostRef = useRef<HTMLDivElement>(null)
-  const controls = useKeyboard(true)
   const onSnapshotRef = useRef(onSnapshot)
   const onLoadErrorRef = useRef(onLoadError)
   onSnapshotRef.current = onSnapshot
@@ -174,7 +174,9 @@ export function GameCanvas({ onSnapshot, onLoadError }: GameCanvasProps) {
       const unsubscribe = match.subscribe((snap) => onSnapshotRef.current(snap))
 
       const tick = () => {
-        const snap = match.update(next.ticker.deltaMS / 1000, controls.current)
+        const seconds = appliedSeconds(next.ticker.deltaMS / 1000, pausedRef.current || document.hidden)
+        if (seconds === 0) return
+        const snap = match.update(seconds, mergeControls(keyboardRef.current, touchRef.current))
         draw(snap)
       }
       next.ticker.add(tick)
@@ -191,7 +193,7 @@ export function GameCanvas({ onSnapshot, onLoadError }: GameCanvasProps) {
       stop()
       app?.destroy({ removeView: true }, { children: true })
     }
-  }, [controls])
+  }, [pausedRef, keyboardRef, touchRef])
 
   return <div ref={hostRef} style={{ width: '100%', height: '100%' }} />
 }

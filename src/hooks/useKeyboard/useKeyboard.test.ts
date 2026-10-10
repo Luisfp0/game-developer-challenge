@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { controlsFromKeys } from './index'
+import { controlsFromKeys, mergeControls } from './index'
 
 describe('controlsFromKeys', () => {
   it('maps sailing keys', () => {
@@ -19,6 +19,22 @@ describe('controlsFromKeys', () => {
       left: false,
       right: true,
       fire: false,
+    })
+  })
+})
+
+describe('mergeControls', () => {
+  it('keeps a command held by only one source', () => {
+    expect(
+      mergeControls(
+        { forward: true, left: false, right: false, fire: false },
+        { forward: false, left: true, right: false, fire: true },
+      ),
+    ).toEqual({
+      forward: true,
+      left: true,
+      right: false,
+      fire: true,
     })
   })
 })

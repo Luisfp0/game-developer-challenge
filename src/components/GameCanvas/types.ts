@@ -1,6 +1,9 @@
-import type { MatchSnapshot } from '../../types/game'
+import type { HeldControls, MatchSnapshot } from '../../types/game'
 
 export type GameCanvasProps = {
   onSnapshot: (snapshot: MatchSnapshot) => void
   onLoadError: (message: string) => void
+  pausedRef: { current: boolean }
+  keyboardRef: { current: HeldControls }
+  touchRef: { current: HeldControls }
 }
