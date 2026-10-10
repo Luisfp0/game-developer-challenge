@@ -35,6 +35,8 @@ export const GAME_CONFIG = {
   shipRadius: 28,
   shotCooldownSeconds: 0.45,
   spawnIntervalSeconds: 10,
+  spawnIntervalMin: 5,
+  spawnIntervalMax: 30,
   spawnPlayerDistance: 384,
   spawnShipDistance: 128,
 } as const

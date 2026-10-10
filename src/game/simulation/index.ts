@@ -19,6 +19,7 @@ export type MatchSeed = {
   chaser?: Partial<Pick<Enemy, 'x' | 'y'>>
   shooters?: { x: number; y: number }[]
   matchSeconds?: number
+  spawnIntervalSeconds?: number
 }
 
 export type Match = {
@@ -64,6 +65,14 @@ function clampMatchSeconds(requested?: number): number {
   )
 }
 
+function clampSpawnInterval(requested?: number): number {
+  if (requested === undefined) return GAME_CONFIG.spawnIntervalSeconds
+  return Math.min(
+    GAME_CONFIG.spawnIntervalMax,
+    Math.max(GAME_CONFIG.spawnIntervalMin, requested),
+  )
+}
+
 export function createMatch(seed?: MatchSeed): Match {
   const ship = createShip(seed?.ship)
   const enemies: Enemy[] = [createChaser(seed?.chaser)]
@@ -71,6 +80,7 @@ export function createMatch(seed?: MatchSeed): Match {
   const shooterCooldown = new Map<number, number>()
   let score = 0
   const matchSeconds = clampMatchSeconds(seed?.matchSeconds)
+  const spawnIntervalSeconds = clampSpawnInterval(seed?.spawnIntervalSeconds)
   let remainingSeconds = matchSeconds
   let phase: MatchSnapshot['phase'] = 'playing'
   let endReason: MatchSnapshot['endReason'] = null
@@ -299,8 +309,8 @@ export function createMatch(seed?: MatchSeed): Match {
 
     if (phase === 'playing') {
       spawnClock += elapsed
-      while (spawnClock >= GAME_CONFIG.spawnIntervalSeconds) {
-        spawnClock -= GAME_CONFIG.spawnIntervalSeconds
+      while (spawnClock >= spawnIntervalSeconds) {
+        spawnClock -= spawnIntervalSeconds
         const point = spawnPoint({
           x: ship.x,
           y: ship.y,

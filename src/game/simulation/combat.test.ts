@@ -297,5 +297,27 @@ describe('combat', () => {
       const after5 = match.update(5, idle)
       expect(after5.enemies).toHaveLength(4)
     })
+
+    it('clamps a spawn interval below 5 up to 5', () => {
+      const snap = createMatch({ spawnIntervalSeconds: 4 }).update(5, idle)
+      expect(snap.enemies).toHaveLength(2)
+    })
+
+    it('clamps a spawn interval above 30 down to 30', () => {
+      const early = createMatch({ spawnIntervalSeconds: 40 }).update(29, idle)
+      expect(early.enemies).toHaveLength(1)
+      const snap = createMatch({ spawnIntervalSeconds: 40 }).update(30, idle)
+      expect(snap.enemies).toHaveLength(2)
+    })
+
+    it('births a shooter after a saved interval of 15 seconds', () => {
+      const early = createMatch({ spawnIntervalSeconds: 15 }).update(14, idle)
+      expect(early.enemies).toHaveLength(1)
+      const snap = createMatch({ spawnIntervalSeconds: 15 }).update(15, idle)
+      expect(snap.enemies).toHaveLength(2)
+      expect(snap.enemies[1].kind).toBe('shooter')
+      expect(snap.enemies[1].x).toBe(928)
+      expect(snap.enemies[1].y).toBe(384)
+    })
   })
 })
