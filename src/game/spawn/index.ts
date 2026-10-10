@@ -19,7 +19,7 @@ export function spawnPoint(args: {
   minPlayerDistance: number
   minShipDistance: number
   shipRadius: number
-  island: { x: number; y: number; width: number; height: number }
+  islands: { x: number; y: number; width: number; height: number }[]
   points?: { x: number; y: number }[]
 }): { x: number; y: number; nextIndex: number } | null {
   const points = args.points ?? SPAWN_POINTS
@@ -30,7 +30,7 @@ export function spawnPoint(args: {
     const index = (args.startIndex + offset) % count
     const { x, y } = points[index]
 
-    if (circleHitsRect({ x, y, radius: args.shipRadius }, args.island)) {
+    if (args.islands.some((island) => circleHitsRect({ x, y, radius: args.shipRadius }, island))) {
       continue
     }
 

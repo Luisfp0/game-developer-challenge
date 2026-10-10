@@ -3,15 +3,16 @@ import {
   ARENA_WIDTH,
   CHASER_START,
   GAME_CONFIG,
-  ISLAND,
+  ISLANDS,
   PLAYER_START,
+  TILE_SIZE,
 } from '../../constants/gameConfig'
 import type { Enemy } from '../../types/enemy'
 import type { HeldControls, MatchSnapshot } from '../../types/game'
 import type { Projectile } from '../../types/projectile'
 import type { Ship } from '../../types/ship'
 import { sideVolley } from '../broadside'
-import { circleHitsRect, circlesOverlap, clampToArena } from '../collision'
+import { circleHitsRoundRect, circlesOverlap, clampToArena, pushOutOfRoundRect } from '../collision'
 import { spawnPoint } from '../spawn'
 
 export type MatchSeed = {
@@ -105,6 +106,7 @@ export function createMatch(seed?: MatchSeed): Match {
     enemies.push(shooter)
     shooterCooldown.set(shooter.id, 0)
   }
+  const wallSide = new Map<number, number>()
   const listeners = new Set<(snapshot: MatchSnapshot) => void>()
   let notified = ''
 
@@ -119,7 +121,7 @@ export function createMatch(seed?: MatchSeed): Match {
       ship: { ...ship },
       enemies: enemies.map((enemy) => ({ ...enemy })),
       projectiles: projectiles.map((shot) => ({ ...shot })),
-      island: { ...ISLAND },
+      islands: ISLANDS.map((island) => ({ ...island })),
     }
   }
 
@@ -142,12 +144,79 @@ export function createMatch(seed?: MatchSeed): Match {
     remainingSeconds = Math.max(remainingSeconds, 0)
   }
 
-  function tryMove(body: { x: number; y: number; radius: number }, nx: number, ny: number): void {
-    const clamped = clampToArena(nx, ny, body.radius, ARENA_WIDTH, ARENA_HEIGHT)
-    if (!circleHitsRect({ ...clamped, radius: body.radius }, ISLAND)) {
+  function offTheSand(x: number, y: number, radius: number): { x: number; y: number } {
+    let px = x
+    let py = y
+    for (const island of ISLANDS) {
+      const freed = pushOutOfRoundRect({ x: px, y: py, radius }, island, TILE_SIZE)
+      if (freed) {
+        px = freed.x
+        py = freed.y
+      }
+    }
+    return { x: px, y: py }
+  }
+
+  function hitsSand(x: number, y: number, radius: number): boolean {
+    return ISLANDS.some((island) => circleHitsRoundRect({ x, y, radius }, island, TILE_SIZE))
+  }
+
+  function tryMove(
+    body: { x: number; y: number; radius: number },
+    nx: number,
+    ny: number,
+    around?: { id: number; goalX: number; goalY: number },
+  ): void {
+    const radius = body.radius
+    const clamped = clampToArena(nx, ny, radius, ARENA_WIDTH, ARENA_HEIGHT)
+    if (!hitsSand(clamped.x, clamped.y, radius)) {
+      if (around) wallSide.delete(around.id)
       body.x = clamped.x
       body.y = clamped.y
+      return
     }
+    const freed = offTheSand(clamped.x, clamped.y, radius)
+    const outwardX = freed.x - clamped.x
+    const outwardY = freed.y - clamped.y
+    const outward = Math.hypot(outwardX, outwardY) || 1
+    const tx = -outwardY / outward
+    const ty = outwardX / outward
+    const dx = clamped.x - body.x
+    const dy = clamped.y - body.y
+    const speed = Math.hypot(dx, dy)
+    if (!around) {
+      const along = dx * tx + dy * ty
+      const sign = Math.abs(along) > speed * 0.02 ? Math.sign(along) : 0
+      const slid =
+        sign === 0
+          ? freed
+          : offTheSand(body.x + tx * sign * speed, body.y + ty * sign * speed, radius)
+      const fitted = clampToArena(slid.x, slid.y, radius, ARENA_WIDTH, ARENA_HEIGHT)
+      body.x = fitted.x
+      body.y = fitted.y
+      return
+    }
+    let side = wallSide.get(around.id)
+    if (side === undefined) {
+      const goalX = around.goalX - body.x
+      const goalY = around.goalY - body.y
+      const towardGoal = goalX * tx + goalY * ty
+      if (Math.abs(towardGoal) > 0.01) {
+        side = Math.sign(towardGoal)
+      } else {
+        const island = ISLANDS.find((land) =>
+          circleHitsRoundRect({ ...clamped, radius }, land, TILE_SIZE),
+        )
+        const rx = body.x - ((island?.x ?? 0) + (island?.width ?? 0) / 2)
+        const ry = body.y - ((island?.y ?? 0) + (island?.height ?? 0) / 2)
+        side = tx * ry + ty * -rx >= 0 ? 1 : -1
+      }
+      wallSide.set(around.id, side)
+    }
+    const slid = offTheSand(freed.x + tx * side * speed, freed.y + ty * side * speed, radius)
+    const fitted = clampToArena(slid.x, slid.y, radius, ARENA_WIDTH, ARENA_HEIGHT)
+    body.x = fitted.x
+    body.y = fitted.y
   }
 
   function update(dtSeconds: number, controls: HeldControls): MatchSnapshot {
@@ -232,6 +301,7 @@ export function createMatch(seed?: MatchSeed): Match {
           enemy,
           enemy.x + (dx / length) * GAME_CONFIG.chaserSpeed * dt,
           enemy.y + (dy / length) * GAME_CONFIG.chaserSpeed * dt,
+          { id: enemy.id, goalX: ship.x, goalY: ship.y },
         )
       }
     }
@@ -266,7 +336,7 @@ export function createMatch(seed?: MatchSeed): Match {
       shot.y += shot.vy * dt
       const outside =
         shot.x < 0 || shot.y < 0 || shot.x > ARENA_WIDTH || shot.y > ARENA_HEIGHT
-      const hitIsland = circleHitsRect(shot, ISLAND)
+      const hitIsland = ISLANDS.some((island) => circleHitsRoundRect(shot, island, TILE_SIZE))
       let spent = false
       if (!outside && !hitIsland) {
         if (shot.owner === 'player') {
@@ -319,7 +389,7 @@ export function createMatch(seed?: MatchSeed): Match {
           minPlayerDistance: GAME_CONFIG.spawnPlayerDistance,
           minShipDistance: GAME_CONFIG.spawnShipDistance,
           shipRadius: GAME_CONFIG.shipRadius,
-          island: ISLAND,
+          islands: ISLANDS,
         })
         if (!point) continue
         const health =

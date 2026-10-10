@@ -6,12 +6,11 @@ export const ARENA_ROWS = 12
 export const ARENA_WIDTH = TILE_SIZE * ARENA_COLS
 export const ARENA_HEIGHT = TILE_SIZE * ARENA_ROWS
 
-export const ISLAND: Island = {
-  x: 7 * TILE_SIZE,
-  y: 5 * TILE_SIZE,
-  width: TILE_SIZE * 2,
-  height: TILE_SIZE * 2,
-}
+export const ISLANDS: Island[] = [
+  { x: 6 * TILE_SIZE, y: 4 * TILE_SIZE, width: 4 * TILE_SIZE, height: 4 * TILE_SIZE },
+  { x: 3 * TILE_SIZE, y: 1 * TILE_SIZE, width: 2 * TILE_SIZE, height: 2 * TILE_SIZE },
+  { x: 11 * TILE_SIZE, y: 8 * TILE_SIZE, width: 2 * TILE_SIZE, height: 2 * TILE_SIZE },
+]
 
 export const PLAYER_START = { x: 160, y: 384, rotation: 0 }
 export const CHASER_START = { x: 864, y: 160 }

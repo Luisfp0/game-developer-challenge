@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { circlesOverlap, circleHitsRect, clampToArena } from './index'
+import { circlesOverlap, circleHitsRect, circleHitsRoundRect, clampToArena, pushOutOfRoundRect } from './index'
 
 describe('collision', () => {
   it('detects overlapping circles', () => {
@@ -17,6 +17,18 @@ describe('collision', () => {
     const rect = { x: 100, y: 100, width: 64, height: 64 }
     expect(circleHitsRect({ x: 90, y: 120, radius: 12 }, rect)).toBe(true)
     expect(circleHitsRect({ x: 40, y: 120, radius: 12 }, rect)).toBe(false)
+  })
+
+  it('lets a circle pass the empty corner of a rounded shore', () => {
+    const rect = { x: 100, y: 100, width: 256, height: 256 }
+    expect(circleHitsRoundRect({ x: 100, y: 100, radius: 10 }, rect, 64)).toBe(false)
+    expect(circleHitsRoundRect({ x: 88, y: 228, radius: 12 }, rect, 64)).toBe(true)
+  })
+
+  it('keeps the along-shore part of a step that hits the beach', () => {
+    const rect = { x: 100, y: 100, width: 256, height: 256 }
+    const freed = pushOutOfRoundRect({ x: 96, y: 180, radius: 12 }, rect, 64)
+    expect(freed).toEqual({ x: 88, y: 180 })
   })
 
   it('keeps a circle inside the arena', () => {

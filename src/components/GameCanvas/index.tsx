@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Application, Assets, Container, Graphics, Sprite, Texture } from 'pixi.js'
 import { ASSET_URLS } from '../../constants/assets'
-import { ARENA_HEIGHT, ARENA_WIDTH, TILE_SIZE } from '../../constants/gameConfig'
+import { ARENA_HEIGHT, ARENA_WIDTH, ISLANDS, TILE_SIZE } from '../../constants/gameConfig'
 import { hullFlames } from '../../game/effects'
 import { appliedSeconds } from '../../game/pause'
 import { controlsFromTouch } from '../../game/touch'
@@ -191,16 +191,26 @@ export function GameCanvas({
       const world = new Container()
       next.stage.addChild(world)
 
-      const island = new Container()
-      const landA = new Sprite(textures.land)
-      const landB = new Sprite(textures.land)
-      const landC = new Sprite(textures.land)
-      const landD = new Sprite(textures.land)
-      landB.x = TILE_SIZE
-      landC.y = TILE_SIZE
-      landD.position.set(TILE_SIZE, TILE_SIZE)
-      island.addChild(landA, landB, landC, landD)
-      world.addChild(island)
+      const centerTiles = [
+        ['sandNw', 'sandN', 'sandN', 'sandNe'],
+        ['sandW', 'land', 'land', 'sandE'],
+        ['sandW', 'land', 'land', 'sandE'],
+        ['sandSw', 'sandS', 'sandS', 'sandSe'],
+      ] as const
+      const bankTiles = [
+        ['sandNw', 'sandNe'],
+        ['sandSw', 'sandSe'],
+      ] as const
+      const islandTiles = [centerTiles, bankTiles, bankTiles]
+      ISLANDS.forEach((island, index) => {
+        islandTiles[index].forEach((row, rowIndex) => {
+          row.forEach((key, colIndex) => {
+            const sprite = new Sprite(textures[key])
+            sprite.position.set(island.x + colIndex * TILE_SIZE, island.y + rowIndex * TILE_SIZE)
+            world.addChild(sprite)
+          })
+        })
+      })
 
       const player = new Sprite(textures.playerShip)
       player.anchor.set(0.5)
@@ -273,7 +283,6 @@ export function GameCanvas({
         }
         previous = snap
 
-        island.position.set(snap.island.x, snap.island.y)
         const shipAlive = snap.ship.health > 0
         player.visible = shipAlive
         playerBar.view.visible = shipAlive

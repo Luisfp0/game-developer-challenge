@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { GAME_CONFIG, ISLAND, PLAYER_START } from '../../constants/gameConfig'
+import { GAME_CONFIG, ISLANDS, PLAYER_START } from '../../constants/gameConfig'
 import { createMatch } from './index'
 
 const idle = {
@@ -100,8 +100,21 @@ describe('combat', () => {
   })
 
   it('removes a shot that hits the island', () => {
+    const island = ISLANDS[0]
     const match = createMatch({
-      ship: { x: ISLAND.x + 32, y: ISLAND.y + ISLAND.height + 40, rotation: 0 },
+      ship: { x: island.x + 32, y: island.y + island.height + 40, rotation: 0 },
+    })
+    match.update(0.016, { ...idle, fire: true })
+    let snap = match.snapshot()
+    for (let i = 0; i < 30; i += 1) snap = match.update(0.05, idle)
+    expect(snap.projectiles).toHaveLength(0)
+    expect(snap.score).toBe(0)
+  })
+
+  it('removes a shot that hits the lower sand bank', () => {
+    const bank = ISLANDS[2]
+    const match = createMatch({
+      ship: { x: bank.x + 32, y: bank.y + bank.height + 40, rotation: 0 },
     })
     match.update(0.016, { ...idle, fire: true })
     let snap = match.snapshot()
@@ -163,23 +176,23 @@ describe('combat', () => {
 
     it('stops inside range and fires one enemy ball', () => {
       const match = createMatch({
-        ship: { x: 450, y: 400, rotation: 0 },
+        ship: { x: 450, y: 700, rotation: 0 },
         chaser: far,
-        shooters: [{ x: 200, y: 400 }],
+        shooters: [{ x: 200, y: 700 }],
       })
       const snap = match.update(0.016, idle)
       const shooter = snap.enemies[1]
       expect(shooter.kind).toBe('shooter')
       expect(shooter.x).toBe(200)
-      expect(shooter.y).toBe(400)
+      expect(shooter.y).toBe(700)
       expect(snap.projectiles.filter((shot) => shot.owner === 'enemy')).toHaveLength(1)
     })
 
     it('does not hurt the player or die when touching the player', () => {
       const match = createMatch({
-        ship: { x: 450, y: 400, rotation: 0 },
+        ship: { x: 450, y: 700, rotation: 0 },
         chaser: far,
-        shooters: [{ x: 450, y: 400 }],
+        shooters: [{ x: 450, y: 700 }],
       })
       const snap = match.update(0.016, idle)
       expect(snap.enemies[1].alive).toBe(true)
@@ -189,9 +202,9 @@ describe('combat', () => {
 
     it('destroys the player with its shots and scores nothing', () => {
       const match = createMatch({
-        ship: { x: 400, y: 600, rotation: 0 },
+        ship: { x: 900, y: 200, rotation: 0 },
         chaser: far,
-        shooters: [{ x: 400, y: 400 }],
+        shooters: [{ x: 900, y: 450 }],
       })
       let snap = match.snapshot()
       for (let i = 0; i < 100 && snap.playerHealth > 0; i += 1) {
@@ -206,9 +219,9 @@ describe('combat', () => {
 
     it('lets an enemy ball pass through another enemy', () => {
       const match = createMatch({
-        ship: { x: 450, y: 400, rotation: 0 },
-        chaser: { x: 300, y: 400 },
-        shooters: [{ x: 200, y: 400 }],
+        ship: { x: 450, y: 700, rotation: 0 },
+        chaser: { x: 300, y: 700 },
+        shooters: [{ x: 200, y: 700 }],
       })
       let snap = match.snapshot()
       for (let i = 0; i < 40 && snap.playerHealth === GAME_CONFIG.playerHealth; i += 1) {
@@ -221,12 +234,12 @@ describe('combat', () => {
 
     it('keeps firing every cooldown without waiting for earlier enemy balls', () => {
       const match = createMatch({
-        ship: { x: 450, y: 100, rotation: 0 },
+        ship: { x: 650, y: 100, rotation: 0 },
         chaser: far,
-        shooters: [{ x: 200, y: 100 }],
+        shooters: [{ x: 400, y: 100 }],
       })
       const first = match.update(0.016, idle)
-      expect(first.enemies[1].x).toBe(200)
+      expect(first.enemies[1].x).toBe(400)
       expect(first.enemies[1].y).toBe(100)
       expect(first.projectiles.filter((shot) => shot.owner === 'enemy')).toHaveLength(1)
       for (let i = 0; i < 24; i += 1) match.update(0.05, { ...idle, forward: true })
@@ -247,9 +260,9 @@ describe('combat', () => {
 
     it('does not finish a 1.2 second cooldown in a single capped update', () => {
       const match = createMatch({
-        ship: { x: 450, y: 400, rotation: 0 },
+        ship: { x: 650, y: 100, rotation: 0 },
         chaser: far,
-        shooters: [{ x: 200, y: 400 }],
+        shooters: [{ x: 400, y: 100 }],
       })
       match.update(0.016, idle)
       const snap = match.update(GAME_CONFIG.shooterCooldownSeconds, idle)

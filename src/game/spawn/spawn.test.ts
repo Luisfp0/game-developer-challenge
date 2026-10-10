@@ -17,7 +17,7 @@ describe('spawnPoint', () => {
         minPlayerDistance,
         minShipDistance,
         shipRadius,
-        island,
+        islands: [island],
       }),
     ).toEqual({ x: 928, y: 384, nextIndex: 2 })
   })
@@ -32,7 +32,7 @@ describe('spawnPoint', () => {
         minPlayerDistance,
         minShipDistance,
         shipRadius,
-        island,
+        islands: [island],
         points: [{ x: 512, y: 384 }],
       }),
     ).toBeNull()
@@ -48,7 +48,7 @@ describe('spawnPoint', () => {
         minPlayerDistance,
         minShipDistance,
         shipRadius,
-        island,
+        islands: [island],
         points: [{ x: 928, y: 384 }],
       }),
     ).toEqual({ x: 928, y: 384, nextIndex: 0 })
@@ -64,7 +64,7 @@ describe('spawnPoint', () => {
         minPlayerDistance,
         minShipDistance,
         shipRadius,
-        island,
+        islands: [island],
         points: [{ x: 200, y: 400 }],
       }),
     ).toBeNull()
@@ -80,10 +80,29 @@ describe('spawnPoint', () => {
         minPlayerDistance,
         minShipDistance,
         shipRadius,
-        island,
+        islands: [island],
         points: [{ x: 900, y: 400 }, { x: 900, y: 80 }],
       }),
     ).toEqual({ x: 900, y: 80, nextIndex: 0 })
+  })
+
+  it('rejects a point that only overlaps the second island', () => {
+    expect(
+      spawnPoint({
+        x: 160,
+        y: 384,
+        enemies: [],
+        startIndex: 0,
+        minPlayerDistance,
+        minShipDistance,
+        shipRadius,
+        islands: [
+          { x: 448, y: 320, width: 128, height: 128 },
+          { x: 880, y: 60, width: 40, height: 40 },
+        ],
+        points: [{ x: 900, y: 80 }],
+      }),
+    ).toBeNull()
   })
 
   it('starts scanning at startIndex on the default points', () => {
@@ -96,7 +115,7 @@ describe('spawnPoint', () => {
         minPlayerDistance,
         minShipDistance,
         shipRadius,
-        island,
+        islands: [island],
       }),
     ).toEqual({ x: 928, y: 672, nextIndex: 3 })
   })

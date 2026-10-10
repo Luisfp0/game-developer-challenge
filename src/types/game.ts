@@ -31,5 +31,5 @@ export type MatchSnapshot = {
   ship: Ship
   enemies: Enemy[]
   projectiles: Projectile[]
-  island: Island
+  islands: Island[]
 }
