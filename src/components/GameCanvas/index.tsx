@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Application, Assets, Container, Graphics, Sprite, Texture } from 'pixi.js'
 import { ASSET_URLS } from '../../constants/assets'
 import { ARENA_HEIGHT, ARENA_WIDTH, ISLANDS, TILE_SIZE } from '../../constants/gameConfig'
+import { fittedArenaSize } from '../../game/canvas'
 import { hullFlames } from '../../game/effects'
 import { appliedSeconds } from '../../game/pause'
 import { controlsFromTouch } from '../../game/touch'
@@ -132,6 +133,14 @@ export function GameCanvas({
     let app: Application | null = null
 
     let stop = () => {}
+    let observer: ResizeObserver | null = null
+
+    function fit(canvas: HTMLCanvasElement) {
+      const box = host!.getBoundingClientRect()
+      const size = fittedArenaSize(box.width, box.height, ARENA_WIDTH, ARENA_HEIGHT)
+      canvas.style.width = `${size.width}px`
+      canvas.style.height = `${size.height}px`
+    }
 
     async function start() {
       const next = new Application()
@@ -141,6 +150,8 @@ export function GameCanvas({
           height: ARENA_HEIGHT,
           background: '#073047',
           antialias: true,
+          resolution: window.devicePixelRatio || 1,
+          autoDensity: true,
         })
       } catch (error) {
         if (alive) onLoadErrorRef.current(error instanceof Error ? error.message : 'Could not start the canvas')
@@ -152,9 +163,10 @@ export function GameCanvas({
       }
       app = next
       host!.appendChild(next.canvas)
-      next.canvas.style.width = '100%'
-      next.canvas.style.height = '100%'
-      next.canvas.style.objectFit = 'contain'
+      next.canvas.style.display = 'block'
+      fit(next.canvas)
+      observer = new ResizeObserver(() => fit(next.canvas))
+      observer.observe(host!)
 
       let textures: Record<keyof typeof ASSET_URLS, Texture>
       try {
@@ -361,13 +373,24 @@ export function GameCanvas({
 
     return () => {
       alive = false
+      observer?.disconnect()
       stop()
       app?.destroy({ removeView: true }, { children: true })
     }
   }, [pausedRef, keyboardRef, touchRef, matchSeconds, spawnIntervalSeconds])
 
   return (
-    <div ref={hostRef} style={{ position: 'relative', width: '100%', height: '100%' }}>
+    <div
+      ref={hostRef}
+      style={{
+        position: 'relative',
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
       {loading ? (
         <div
           role="status"
