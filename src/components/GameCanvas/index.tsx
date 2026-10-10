@@ -147,11 +147,15 @@ export function GameCanvas({ onSnapshot, onLoadError, pausedRef, keyboardRef, to
       player.anchor.set(0.5)
       const chaser = new Sprite(textures.chaserShip)
       chaser.anchor.set(0.5)
-      const shot = new Sprite(textures.cannonball)
-      shot.anchor.set(0.5)
+      const shots = Array.from({ length: 7 }, () => {
+        const sprite = new Sprite(textures.cannonball)
+        sprite.anchor.set(0.5)
+        sprite.visible = false
+        return sprite
+      })
       const playerBar = healthBar(textures.playerHealthFrame, textures.playerHealthFill)
       const chaserBar = healthBar(textures.enemyHealthFrame, textures.enemyHealthFill)
-      world.addChild(player, chaser, shot, playerBar.view, chaserBar.view)
+      world.addChild(player, chaser, ...shots, playerBar.view, chaserBar.view)
 
       const draw = (snap: MatchSnapshot) => {
         island.position.set(snap.island.x, snap.island.y)
@@ -161,9 +165,11 @@ export function GameCanvas({ onSnapshot, onLoadError, pausedRef, keyboardRef, to
         chaser.visible = enemy.alive
         chaser.position.set(enemy.x, enemy.y)
         chaser.rotation = enemy.rotation
-        const projectile = snap.projectiles[0]
-        shot.visible = projectile !== undefined
-        if (projectile) shot.position.set(projectile.x, projectile.y)
+        shots.forEach((sprite, index) => {
+          const projectile = snap.projectiles[index]
+          sprite.visible = projectile !== undefined
+          if (projectile) sprite.position.set(projectile.x, projectile.y)
+        })
         playerBar.setRatio(snap.ship.maxHealth === 0 ? 0 : snap.ship.health / snap.ship.maxHealth)
         playerBar.view.position.set(snap.ship.x - playerBar.width / 2, snap.ship.y - 58)
         chaserBar.view.visible = enemy.alive
