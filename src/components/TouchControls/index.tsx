@@ -14,7 +14,26 @@ const fireStyle = {
   userSelect: 'none' as const,
 }
 
-export function TouchControls({ onStick, onFire }: TouchControlsProps) {
+function holdButton(label: string, onHeld: (held: boolean) => void) {
+  return (
+    <button
+      type="button"
+      style={fireStyle}
+      onPointerDown={(event) => {
+        event.preventDefault()
+        onHeld(true)
+      }}
+      onPointerUp={() => onHeld(false)}
+      onPointerCancel={() => onHeld(false)}
+      onPointerLeave={() => onHeld(false)}
+      onContextMenu={(event) => event.preventDefault()}
+    >
+      {label}
+    </button>
+  )
+}
+
+export function TouchControls({ onStick, onFire, onFireLeft, onFireRight }: TouchControlsProps) {
   const padRef = useRef<HTMLDivElement>(null)
   const [knob, setKnob] = useState({ x: 0, y: 0 })
 
@@ -34,10 +53,6 @@ export function TouchControls({ onStick, onFire }: TouchControlsProps) {
   function releaseStick() {
     setKnob({ x: 0, y: 0 })
     onStick(null)
-  }
-
-  function releaseFire() {
-    onFire(false)
   }
 
   return (
@@ -92,21 +107,23 @@ export function TouchControls({ onStick, onFire }: TouchControlsProps) {
           }}
         />
       </div>
-      <div style={{ position: 'absolute', right: 16, bottom: 16, pointerEvents: 'auto' }}>
-        <button
-          type="button"
-          style={fireStyle}
-          onPointerDown={(event) => {
-            event.preventDefault()
-            onFire(true)
-          }}
-          onPointerUp={releaseFire}
-          onPointerCancel={releaseFire}
-          onPointerLeave={releaseFire}
-          onContextMenu={(event) => event.preventDefault()}
-        >
-          Fire
-        </button>
+      <div
+        style={{
+          position: 'absolute',
+          right: 16,
+          bottom: 16,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'flex-end',
+          gap: 8,
+          pointerEvents: 'auto',
+        }}
+      >
+        <div style={{ display: 'flex', gap: 8 }}>
+          {holdButton('Left fire', onFireLeft)}
+          {holdButton('Right fire', onFireRight)}
+        </div>
+        {holdButton('Fire', onFire)}
       </div>
     </div>
   )
