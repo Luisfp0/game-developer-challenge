@@ -4,6 +4,7 @@ export type MatchResultProps = {
   score: number
   timePlayedSeconds: number
   endReason: EndReason
+  saved: boolean
   onPlayAgain: () => void
   onMainMenu: () => void
 }

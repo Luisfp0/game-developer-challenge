@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { MatchResult } from './components/MatchResult'
+import { writeLastMatch } from './game/lastMatch'
 import { readOptions } from './game/options'
+import { HistoryPage } from './pages/History'
 import { MenuPage } from './pages/Menu'
 import { MatchPage } from './pages/Match'
 import { OptionsPage } from './pages/Options'
@@ -15,6 +17,7 @@ export function App() {
   const [matchSeconds, setMatchSeconds] = useState(60)
   const [spawnIntervalSeconds, setSpawnIntervalSeconds] = useState(10)
   const [result, setResult] = useState<MatchSnapshot | null>(null)
+  const [matchSaved, setMatchSaved] = useState(false)
 
   function leaveMatch() {
     setScore(0)
@@ -35,11 +38,22 @@ export function App() {
   }
 
   if (phase === 'menu') {
-    return <MenuPage error={error} onPlay={play} onOptions={() => setPhase('options')} />
+    return (
+      <MenuPage
+        error={error}
+        onPlay={play}
+        onOptions={() => setPhase('options')}
+        onHistory={() => setPhase('history')}
+      />
+    )
   }
 
   if (phase === 'options') {
     return <OptionsPage onBack={() => setPhase('menu')} />
+  }
+
+  if (phase === 'history') {
+    return <HistoryPage onBack={() => setPhase('menu')} />
   }
 
   if (phase === 'result' && result?.endReason) {
@@ -48,6 +62,7 @@ export function App() {
         score={result.score}
         timePlayedSeconds={result.timePlayedSeconds}
         endReason={result.endReason}
+        saved={matchSaved}
         onPlayAgain={play}
         onMainMenu={() => setPhase('menu')}
       />
@@ -69,7 +84,17 @@ export function App() {
       onSnapshot={(snapshot) => {
         setScore(snapshot.score)
         setRemainingSeconds(Math.ceil(snapshot.remainingSeconds))
-        if (snapshot.phase === 'result') {
+        if (snapshot.phase === 'result' && snapshot.endReason) {
+          setMatchSaved(
+            writeLastMatch(localStorage, {
+              score: snapshot.score,
+              timePlayedSeconds: snapshot.timePlayedSeconds,
+              endReason: snapshot.endReason,
+              matchSeconds,
+              spawnIntervalSeconds,
+              playedAt: new Date().toISOString(),
+            }),
+          )
           setResult(snapshot)
           setPhase('result')
         }
