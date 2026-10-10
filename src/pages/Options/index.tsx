@@ -4,9 +4,11 @@ import { fieldErrors, optionsFromFields, readOptions, writeOptions } from '../..
 
 type OptionsPageProps = {
   onBack: () => void
+  onSaved: () => void
+  onSaveFailed: () => void
 }
 
-export function OptionsPage({ onBack }: OptionsPageProps) {
+export function OptionsPage({ onBack, onSaved, onSaveFailed }: OptionsPageProps) {
   const [matchSeconds, setMatchSeconds] = useState(() => String(readOptions(localStorage).matchSeconds))
   const [spawnIntervalSeconds, setSpawnIntervalSeconds] = useState(() =>
     String(readOptions(localStorage).spawnIntervalSeconds),

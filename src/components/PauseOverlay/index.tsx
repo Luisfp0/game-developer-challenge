@@ -1,4 +1,5 @@
 import { useEffect, useRef, type KeyboardEvent } from 'react'
+import { GoldButton } from '../ui'
 import type { PauseOverlayProps } from './types'
 
 export function PauseOverlay({ onResume, onMainMenu }: PauseOverlayProps) {
@@ -24,30 +25,19 @@ export function PauseOverlay({ onResume, onMainMenu }: PauseOverlayProps) {
   }
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label="Paused"
-      onKeyDown={onKeyDown}
-      style={{
-        position: 'absolute',
-        inset: 0,
-        zIndex: 3,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 12,
-        background: 'rgba(7, 48, 71, 0.72)',
-      }}
-    >
-      <p>Paused</p>
-      <button ref={resumeRef} type="button" onClick={onResume}>
-        Resume
-      </button>
-      <button ref={menuRef} type="button" onClick={onMainMenu}>
-        Main menu
-      </button>
+    <div className="pause-scrim" role="dialog" aria-modal="true" aria-label="Paused" onKeyDown={onKeyDown}>
+      <div className="panel">
+        <h1>Paused</h1>
+        <p>Ready when you are.</p>
+        <div className="button-stack">
+          <GoldButton ref={resumeRef} type="button" onClick={onResume}>
+            Resume
+          </GoldButton>
+          <GoldButton ref={menuRef} type="button" variant="secondary" onClick={onMainMenu}>
+            Main menu
+          </GoldButton>
+        </div>
+      </div>
     </div>
   )
 }

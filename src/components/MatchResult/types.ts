@@ -1,10 +1,11 @@
-import type { EndReason } from '../../types/game'
+import type { EndReason, RegistrationStatus } from '../../types/game'
 
 export type MatchResultProps = {
   score: number
   timePlayedSeconds: number
   endReason: EndReason
-  saved: boolean
+  registration: RegistrationStatus
+  onRetry: () => void
   onPlayAgain: () => void
   onMainMenu: () => void
 }

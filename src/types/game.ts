@@ -2,7 +2,8 @@ import type { Enemy } from './enemy'
 import type { Projectile } from './projectile'
 import type { Ship } from './ship'
 
-export type Phase = 'menu' | 'options' | 'history' | 'playing' | 'result'
+export type Phase = 'menu' | 'options' | 'ranking' | 'history' | 'playing' | 'result'
+export type RegistrationStatus = 'saved' | 'pending' | 'failed'
 export type EndReason = 'time' | 'destroyed'
 
 export type HeldControls = {

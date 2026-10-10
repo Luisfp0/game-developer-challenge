@@ -1,6 +1,6 @@
+import { GAME_CONFIG } from '../../constants/gameConfig'
+import { GoldButton, NumberStepper, Screen } from '../ui'
 import type { OptionsFormProps } from './types'
-
-const fieldStyle = { display: 'flex', flexDirection: 'column', gap: 6, textAlign: 'left' } as const
 
 export function OptionsForm({
   matchSeconds,
@@ -15,54 +15,42 @@ export function OptionsForm({
   const invalid = matchSecondsError !== null || spawnIntervalSecondsError !== null
 
   return (
-    <main style={{ maxWidth: 420, margin: '10vh auto', textAlign: 'center' }}>
+    <Screen>
       <h1>Options</h1>
       <form
-        style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
+        className="button-stack"
         onSubmit={(event) => {
           event.preventDefault()
           if (!invalid) onSave()
         }}
       >
-        <div style={fieldStyle}>
-          <label htmlFor="game-session-time">Game session time</label>
-          <input
-            id="game-session-time"
-            value={matchSeconds}
-            aria-invalid={matchSecondsError !== null}
-            aria-describedby={matchSecondsError ? 'game-session-time-error' : undefined}
-            onChange={(event) => onMatchSecondsChange(event.target.value)}
-          />
-          {matchSecondsError ? (
-            <span id="game-session-time-error" role="alert">
-              {matchSecondsError}
-            </span>
-          ) : null}
-        </div>
-        <div style={fieldStyle}>
-          <label htmlFor="enemy-spawn-time">Enemy spawn time</label>
-          <input
-            id="enemy-spawn-time"
-            value={spawnIntervalSeconds}
-            aria-invalid={spawnIntervalSecondsError !== null}
-            aria-describedby={spawnIntervalSecondsError ? 'enemy-spawn-time-error' : undefined}
-            onChange={(event) => onSpawnIntervalSecondsChange(event.target.value)}
-          />
-          {spawnIntervalSecondsError ? (
-            <span id="enemy-spawn-time-error" role="alert">
-              {spawnIntervalSecondsError}
-            </span>
-          ) : null}
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 12 }}>
-          <button type="submit" disabled={invalid}>
-            Save
-          </button>
-          <button type="button" onClick={onBack}>
-            Back
-          </button>
-        </div>
+        <NumberStepper
+          id="game-session-time"
+          label="Game session time"
+          value={matchSeconds}
+          min={GAME_CONFIG.matchSecondsMin}
+          max={GAME_CONFIG.matchSecondsMax}
+          step={10}
+          error={matchSecondsError}
+          onChange={onMatchSecondsChange}
+        />
+        <NumberStepper
+          id="enemy-spawn-time"
+          label="Enemy spawn time"
+          value={spawnIntervalSeconds}
+          min={GAME_CONFIG.spawnIntervalMin}
+          max={GAME_CONFIG.spawnIntervalMax}
+          step={1}
+          error={spawnIntervalSecondsError}
+          onChange={onSpawnIntervalSecondsChange}
+        />
+        <GoldButton type="submit" disabled={invalid}>
+          Save
+        </GoldButton>
+        <GoldButton type="button" variant="secondary" onClick={onBack}>
+          Back
+        </GoldButton>
       </form>
-    </main>
+    </Screen>
   )
 }

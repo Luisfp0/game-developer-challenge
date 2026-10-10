@@ -1,0 +1,16 @@
+export const UI_ASSETS = {
+  background: new URL('../../../assets/ui_scene_background.png', import.meta.url).href,
+  panel: new URL('../../../assets/png/default/ui/menu/panel_menu.png', import.meta.url).href,
+  title: new URL('../../../assets/png/default/ui/menu/title_pirate_battle.png', import.meta.url).href,
+  buttonNormal: new URL('../../../assets/png/default/ui/menu/button_primary_normal.png', import.meta.url).href,
+  buttonHover: new URL('../../../assets/png/default/ui/menu/button_primary_hover.png', import.meta.url).href,
+  buttonPressed: new URL('../../../assets/png/default/ui/menu/button_primary_pressed.png', import.meta.url).href,
+  buttonDisabled: new URL('../../../assets/png/default/ui/menu/button_primary_disabled.png', import.meta.url).href,
+  buttonSecondary: new URL('../../../assets/png/default/ui/menu/button_secondary_normal.png', import.meta.url).href,
+  buttonSecondaryPressed: new URL('../../../assets/png/default/ui/menu/button_secondary_pressed.png', import.meta.url).href,
+  roundButton: new URL('../../../assets/png/default/ui/controls/button_round_normal.png', import.meta.url).href,
+  roundButtonPressed: new URL('../../../assets/png/default/ui/controls/button_round_pressed.png', import.meta.url).href,
+  iconMinus: new URL('../../../assets/png/default/ui/controls/icon_minus.png', import.meta.url).href,
+  iconPlus: new URL('../../../assets/png/default/ui/controls/icon_plus.png', import.meta.url).href,
+  iconPause: new URL('../../../assets/png/default/ui/controls/icon_pause.png', import.meta.url).href,
+} as const
