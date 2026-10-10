@@ -145,8 +145,6 @@ export function GameCanvas({ onSnapshot, onLoadError, pausedRef, keyboardRef, to
 
       const player = new Sprite(textures.playerShip)
       player.anchor.set(0.5)
-      const chaser = new Sprite(textures.chaserShip)
-      chaser.anchor.set(0.5)
       const shots = Array.from({ length: 7 }, () => {
         const sprite = new Sprite(textures.cannonball)
         sprite.anchor.set(0.5)
@@ -154,17 +152,38 @@ export function GameCanvas({ onSnapshot, onLoadError, pausedRef, keyboardRef, to
         return sprite
       })
       const playerBar = healthBar(textures.playerHealthFrame, textures.playerHealthFill)
-      const chaserBar = healthBar(textures.enemyHealthFrame, textures.enemyHealthFill)
-      world.addChild(player, chaser, ...shots, playerBar.view, chaserBar.view)
+      const enemyViews = new Map<number, { sprite: Sprite; bar: HealthBar }>()
+      world.addChild(player, ...shots, playerBar.view)
 
       const draw = (snap: MatchSnapshot) => {
         island.position.set(snap.island.x, snap.island.y)
         player.position.set(snap.ship.x, snap.ship.y)
         player.rotation = snap.ship.rotation
-        const enemy = snap.enemies[0]
-        chaser.visible = enemy.alive
-        chaser.position.set(enemy.x, enemy.y)
-        chaser.rotation = enemy.rotation
+        for (const enemy of snap.enemies) {
+          let view = enemyViews.get(enemy.id)
+          if (!view) {
+            const sprite = new Sprite(enemy.kind === 'shooter' ? textures.shooterShip : textures.chaserShip)
+            sprite.anchor.set(0.5)
+            const bar = healthBar(textures.enemyHealthFrame, textures.enemyHealthFill)
+            world.addChild(sprite, bar.view)
+            view = { sprite, bar }
+            enemyViews.set(enemy.id, view)
+          }
+          view.sprite.visible = enemy.alive
+          view.bar.view.visible = enemy.alive
+          if (!enemy.alive) continue
+          view.sprite.position.set(enemy.x, enemy.y)
+          view.sprite.rotation = enemy.rotation
+          view.bar.setRatio(enemy.maxHealth === 0 ? 0 : enemy.health / enemy.maxHealth)
+          view.bar.view.position.set(enemy.x - view.bar.width / 2, enemy.y - 58)
+        }
+        while (shots.length < snap.projectiles.length) {
+          const sprite = new Sprite(textures.cannonball)
+          sprite.anchor.set(0.5)
+          sprite.visible = false
+          shots.push(sprite)
+          world.addChild(sprite)
+        }
         shots.forEach((sprite, index) => {
           const projectile = snap.projectiles[index]
           sprite.visible = projectile !== undefined
@@ -172,9 +191,6 @@ export function GameCanvas({ onSnapshot, onLoadError, pausedRef, keyboardRef, to
         })
         playerBar.setRatio(snap.ship.maxHealth === 0 ? 0 : snap.ship.health / snap.ship.maxHealth)
         playerBar.view.position.set(snap.ship.x - playerBar.width / 2, snap.ship.y - 58)
-        chaserBar.view.visible = enemy.alive
-        chaserBar.setRatio(enemy.maxHealth === 0 ? 0 : enemy.health / enemy.maxHealth)
-        chaserBar.view.position.set(enemy.x - chaserBar.width / 2, enemy.y - 58)
       }
 
       draw(match.snapshot())

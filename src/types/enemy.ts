@@ -1,6 +1,6 @@
 export type Enemy = {
   id: number
-  kind: 'chaser'
+  kind: 'chaser' | 'shooter'
   x: number
   y: number
   rotation: number

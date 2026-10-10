@@ -18,8 +18,13 @@ export const CHASER_START = { x: 864, y: 160 }
 
 export const GAME_CONFIG = {
   matchSeconds: 60,
+  matchSecondsMin: 60,
+  matchSecondsMax: 180,
   playerHealth: 3,
   chaserHealth: 2,
+  shooterHealth: 2,
+  shooterRange: 256,
+  shooterCooldownSeconds: 1.2,
   ramDamage: 3,
   shotDamage: 1,
   shipSpeed: 140,
@@ -29,4 +34,7 @@ export const GAME_CONFIG = {
   projectileRadius: 6,
   shipRadius: 28,
   shotCooldownSeconds: 0.45,
+  spawnIntervalSeconds: 10,
+  spawnPlayerDistance: 384,
+  spawnShipDistance: 128,
 } as const

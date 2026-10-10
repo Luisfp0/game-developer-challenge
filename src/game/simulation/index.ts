@@ -12,10 +12,13 @@ import type { Projectile } from '../../types/projectile'
 import type { Ship } from '../../types/ship'
 import { sideVolley } from '../broadside'
 import { circleHitsRect, circlesOverlap, clampToArena } from '../collision'
+import { spawnPoint } from '../spawn'
 
 export type MatchSeed = {
   ship?: Partial<Pick<Ship, 'x' | 'y' | 'rotation'>>
   chaser?: Partial<Pick<Enemy, 'x' | 'y'>>
+  shooters?: { x: number; y: number }[]
+  matchSeconds?: number
 }
 
 export type Match = {
@@ -53,16 +56,45 @@ function createChaser(seed?: MatchSeed['chaser']): Enemy {
   }
 }
 
+function clampMatchSeconds(requested?: number): number {
+  if (requested === undefined) return GAME_CONFIG.matchSeconds
+  return Math.min(
+    GAME_CONFIG.matchSecondsMax,
+    Math.max(GAME_CONFIG.matchSecondsMin, requested),
+  )
+}
+
 export function createMatch(seed?: MatchSeed): Match {
   const ship = createShip(seed?.ship)
-  const chaser = createChaser(seed?.chaser)
+  const enemies: Enemy[] = [createChaser(seed?.chaser)]
   const projectiles: Projectile[] = []
+  const shooterCooldown = new Map<number, number>()
   let score = 0
-  let remainingSeconds: number = GAME_CONFIG.matchSeconds
+  const matchSeconds = clampMatchSeconds(seed?.matchSeconds)
+  let remainingSeconds = matchSeconds
   let phase: MatchSnapshot['phase'] = 'playing'
   let endReason: MatchSnapshot['endReason'] = null
   const cooldown = { front: 0, left: 0, right: 0 }
   let nextId = 2
+  let spawnClock = 0
+  let spawnStartIndex = 0
+  let nextSpawnKind: Enemy['kind'] = 'shooter'
+  for (const spot of seed?.shooters ?? []) {
+    const shooter: Enemy = {
+      id: nextId,
+      kind: 'shooter',
+      x: spot.x,
+      y: spot.y,
+      rotation: 0,
+      health: GAME_CONFIG.shooterHealth,
+      maxHealth: GAME_CONFIG.shooterHealth,
+      radius: GAME_CONFIG.shipRadius,
+      alive: true,
+    }
+    nextId += 1
+    enemies.push(shooter)
+    shooterCooldown.set(shooter.id, 0)
+  }
   const listeners = new Set<(snapshot: MatchSnapshot) => void>()
   let notified = ''
 
@@ -71,11 +103,11 @@ export function createMatch(seed?: MatchSeed): Match {
       phase,
       score,
       remainingSeconds,
-      timePlayedSeconds: GAME_CONFIG.matchSeconds - Math.max(remainingSeconds, 0),
+      timePlayedSeconds: matchSeconds - Math.max(remainingSeconds, 0),
       playerHealth: ship.health,
       endReason,
       ship: { ...ship },
-      enemies: [{ ...chaser }],
+      enemies: enemies.map((enemy) => ({ ...enemy })),
       projectiles: projectiles.map((shot) => ({ ...shot })),
       island: { ...ISLAND },
     }
@@ -131,7 +163,8 @@ export function createMatch(seed?: MatchSeed): Match {
     cooldown.right = Math.max(0, cooldown.right - dt)
 
     const weaponReady = (weapon: Projectile['weapon']) =>
-      cooldown[weapon] === 0 && projectiles.every((shot) => shot.weapon !== weapon)
+      cooldown[weapon] === 0 &&
+      projectiles.every((shot) => shot.owner !== 'player' || shot.weapon !== weapon)
 
     const pushShot = (weapon: Projectile['weapon'], x: number, y: number, vx: number, vy: number) => {
       projectiles.push({
@@ -143,6 +176,7 @@ export function createMatch(seed?: MatchSeed): Match {
         radius: GAME_CONFIG.projectileRadius,
         damage: GAME_CONFIG.shotDamage,
         weapon,
+        owner: 'player',
       })
       nextId += 1
     }
@@ -176,7 +210,46 @@ export function createMatch(seed?: MatchSeed): Match {
       cooldown[side] = GAME_CONFIG.shotCooldownSeconds
     }
 
-    const chaserWasAlive = chaser.alive
+    for (const enemy of enemies) {
+      if (!enemy.alive) continue
+      const dx = ship.x - enemy.x
+      const dy = ship.y - enemy.y
+      const distance = Math.hypot(dx, dy)
+      const length = distance || 1
+      enemy.rotation = Math.atan2(dx, -dy)
+      if (enemy.kind === 'chaser' || distance > GAME_CONFIG.shooterRange) {
+        tryMove(
+          enemy,
+          enemy.x + (dx / length) * GAME_CONFIG.chaserSpeed * dt,
+          enemy.y + (dy / length) * GAME_CONFIG.chaserSpeed * dt,
+        )
+      }
+    }
+
+    for (const enemy of enemies) {
+      if (!enemy.alive || enemy.kind !== 'shooter') continue
+      const remaining = Math.max(0, (shooterCooldown.get(enemy.id) ?? 0) - dt)
+      shooterCooldown.set(enemy.id, remaining)
+      const distance = Math.hypot(ship.x - enemy.x, ship.y - enemy.y)
+      if (remaining > 0 || distance > GAME_CONFIG.shooterRange) continue
+      const aim = facing(enemy.rotation)
+      const muzzle = enemy.radius + 8
+      projectiles.push({
+        id: nextId,
+        x: enemy.x + aim.x * muzzle,
+        y: enemy.y + aim.y * muzzle,
+        vx: aim.x * GAME_CONFIG.projectileSpeed,
+        vy: aim.y * GAME_CONFIG.projectileSpeed,
+        radius: GAME_CONFIG.projectileRadius,
+        damage: GAME_CONFIG.shotDamage,
+        weapon: 'front',
+        owner: 'enemy',
+      })
+      nextId += 1
+      shooterCooldown.set(enemy.id, GAME_CONFIG.shooterCooldownSeconds)
+    }
+
+    const aliveAtStart = new Set(enemies.filter((enemy) => enemy.alive))
     for (let i = projectiles.length - 1; i >= 0; i -= 1) {
       const shot = projectiles[i]
       shot.x += shot.vx * dt
@@ -184,36 +257,79 @@ export function createMatch(seed?: MatchSeed): Match {
       const outside =
         shot.x < 0 || shot.y < 0 || shot.x > ARENA_WIDTH || shot.y > ARENA_HEIGHT
       const hitIsland = circleHitsRect(shot, ISLAND)
-      const hitChaser = chaserWasAlive && circlesOverlap(shot, chaser)
-      if (hitChaser) {
-        const hadHealth = chaser.health > 0
-        chaser.health -= shot.damage
-        if (hadHealth && chaser.health <= 0) {
-          chaser.alive = false
-          chaser.health = 0
-          score += 1
-        } else if (chaser.health < 0) {
-          chaser.health = 0
+      let spent = false
+      if (!outside && !hitIsland) {
+        if (shot.owner === 'player') {
+          const target = enemies.find(
+            (enemy) => aliveAtStart.has(enemy) && circlesOverlap(shot, enemy),
+          )
+          if (target) {
+            spent = true
+            const hadHealth = target.health > 0
+            target.health -= shot.damage
+            if (hadHealth && target.health <= 0) {
+              target.alive = false
+              target.health = 0
+              score += 1
+            } else if (target.health < 0) {
+              target.health = 0
+            }
+          }
+        } else if (circlesOverlap(shot, ship)) {
+          spent = true
+          ship.health = Math.max(0, ship.health - shot.damage)
         }
       }
-      if (outside || hitIsland || hitChaser) projectiles.splice(i, 1)
+      if (outside || hitIsland || spent) projectiles.splice(i, 1)
     }
 
-    if (chaser.alive) {
-      const dx = ship.x - chaser.x
-      const dy = ship.y - chaser.y
-      const length = Math.hypot(dx, dy) || 1
-      chaser.rotation = Math.atan2(dx, -dy)
-      tryMove(
-        chaser,
-        chaser.x + (dx / length) * GAME_CONFIG.chaserSpeed * dt,
-        chaser.y + (dy / length) * GAME_CONFIG.chaserSpeed * dt,
-      )
-      if (circlesOverlap(ship, chaser)) {
-        ship.health = Math.max(0, ship.health - GAME_CONFIG.ramDamage)
-        chaser.alive = false
-        chaser.health = 0
-        if (ship.health <= 0) end('destroyed')
+    if (ship.health <= 0) {
+      end('destroyed')
+      notify()
+      return snapshot()
+    }
+
+    for (const enemy of enemies) {
+      if (!enemy.alive || enemy.kind !== 'chaser' || !circlesOverlap(ship, enemy)) continue
+      ship.health = Math.max(0, ship.health - GAME_CONFIG.ramDamage)
+      enemy.alive = false
+      enemy.health = 0
+    }
+    if (ship.health <= 0) end('destroyed')
+
+    if (phase === 'playing') {
+      spawnClock += elapsed
+      while (spawnClock >= GAME_CONFIG.spawnIntervalSeconds) {
+        spawnClock -= GAME_CONFIG.spawnIntervalSeconds
+        const point = spawnPoint({
+          x: ship.x,
+          y: ship.y,
+          enemies,
+          startIndex: spawnStartIndex,
+          minPlayerDistance: GAME_CONFIG.spawnPlayerDistance,
+          minShipDistance: GAME_CONFIG.spawnShipDistance,
+          shipRadius: GAME_CONFIG.shipRadius,
+          island: ISLAND,
+        })
+        if (!point) continue
+        const health =
+          nextSpawnKind === 'shooter' ? GAME_CONFIG.shooterHealth : GAME_CONFIG.chaserHealth
+        const born: Enemy = {
+          id: nextId,
+          kind: nextSpawnKind,
+          x: point.x,
+          y: point.y,
+          rotation: 0,
+          health,
+          maxHealth: health,
+          radius: GAME_CONFIG.shipRadius,
+          alive: true,
+        }
+        nextId += 1
+        enemies.push(born)
+        if (born.kind === 'shooter') shooterCooldown.set(born.id, 0)
+        nextSpawnKind = nextSpawnKind === 'shooter' ? 'chaser' : 'shooter'
+        spawnStartIndex = point.nextIndex
       }
     }
 

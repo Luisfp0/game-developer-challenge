@@ -9,4 +9,5 @@ export type Projectile = {
   radius: number
   damage: number
   weapon: Weapon
+  owner: 'player' | 'enemy'
 }
