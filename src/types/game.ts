@@ -2,7 +2,7 @@ import type { Enemy } from './enemy'
 import type { Projectile } from './projectile'
 import type { Ship } from './ship'
 
-export type Phase = 'menu' | 'playing' | 'result'
+export type Phase = 'menu' | 'options' | 'playing' | 'result'
 export type EndReason = 'time' | 'destroyed'
 
 export type HeldControls = {

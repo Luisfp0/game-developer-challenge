@@ -10,11 +10,22 @@ import type { MatchSnapshot } from '../../types/game'
 type MatchPageProps = {
   score: number
   remainingSeconds: number
+  matchSeconds: number
+  spawnIntervalSeconds: number
   onSnapshot: (snapshot: MatchSnapshot) => void
   onLoadError: (message: string) => void
+  onMainMenu: () => void
 }
 
-export function MatchPage({ score, remainingSeconds, onSnapshot, onLoadError }: MatchPageProps) {
+export function MatchPage({
+  score,
+  remainingSeconds,
+  matchSeconds,
+  spawnIntervalSeconds,
+  onSnapshot,
+  onLoadError,
+  onMainMenu,
+}: MatchPageProps) {
   const [paused, setPaused] = useState(false)
   const pausedRef = useRef(false)
   const keyboard = useKeyboard(pausedRef)
@@ -64,6 +75,8 @@ export function MatchPage({ score, remainingSeconds, onSnapshot, onLoadError }: 
         pausedRef={pausedRef}
         keyboardRef={keyboard.controls}
         touchRef={touch.input}
+        matchSeconds={matchSeconds}
+        spawnIntervalSeconds={spawnIntervalSeconds}
       />
       <Hud score={score} remainingSeconds={remainingSeconds} />
       <button type="button" onClick={() => pauseRef.current()} style={{ position: 'absolute', top: 12, right: 12, zIndex: 2 }}>
@@ -77,7 +90,7 @@ export function MatchPage({ score, remainingSeconds, onSnapshot, onLoadError }: 
           onFireRight={touch.setFireRight}
         />
       ) : null}
-      {paused ? <PauseOverlay onResume={resume} /> : null}
+      {paused ? <PauseOverlay onResume={resume} onMainMenu={onMainMenu} /> : null}
     </div>
   )
 }

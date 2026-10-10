@@ -1,8 +1,34 @@
+import { useEffect, useRef, type KeyboardEvent } from 'react'
 import type { PauseOverlayProps } from './types'
 
-export function PauseOverlay({ onResume }: PauseOverlayProps) {
+export function PauseOverlay({ onResume, onMainMenu }: PauseOverlayProps) {
+  const resumeRef = useRef<HTMLButtonElement>(null)
+  const menuRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    resumeRef.current?.focus()
+  }, [])
+
+  function onKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (event.key !== 'Tab') return
+    const first = resumeRef.current
+    const last = menuRef.current
+    if (!first || !last) return
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault()
+      last.focus()
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault()
+      first.focus()
+    }
+  }
+
   return (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Paused"
+      onKeyDown={onKeyDown}
       style={{
         position: 'absolute',
         inset: 0,
@@ -16,8 +42,11 @@ export function PauseOverlay({ onResume }: PauseOverlayProps) {
       }}
     >
       <p>Paused</p>
-      <button type="button" onClick={onResume}>
+      <button ref={resumeRef} type="button" onClick={onResume}>
         Resume
+      </button>
+      <button ref={menuRef} type="button" onClick={onMainMenu}>
+        Main menu
       </button>
     </div>
   )

@@ -68,7 +68,15 @@ function healthBar(frame: Texture, fill: Texture): HealthBar {
   return { view, width: frame.width * BAR_SCALE, setRatio }
 }
 
-export function GameCanvas({ onSnapshot, onLoadError, pausedRef, keyboardRef, touchRef }: GameCanvasProps) {
+export function GameCanvas({
+  onSnapshot,
+  onLoadError,
+  pausedRef,
+  keyboardRef,
+  touchRef,
+  matchSeconds,
+  spawnIntervalSeconds,
+}: GameCanvasProps) {
   const hostRef = useRef<HTMLDivElement>(null)
   const onSnapshotRef = useRef(onSnapshot)
   const onLoadErrorRef = useRef(onLoadError)
@@ -128,7 +136,7 @@ export function GameCanvas({ onSnapshot, onLoadError, pausedRef, keyboardRef, to
       }
       next.stage.addChild(water)
 
-      const match = createMatch()
+      const match = createMatch({ matchSeconds, spawnIntervalSeconds })
       const world = new Container()
       next.stage.addChild(world)
 
@@ -217,7 +225,7 @@ export function GameCanvas({ onSnapshot, onLoadError, pausedRef, keyboardRef, to
       stop()
       app?.destroy({ removeView: true }, { children: true })
     }
-  }, [pausedRef, keyboardRef, touchRef])
+  }, [pausedRef, keyboardRef, touchRef, matchSeconds, spawnIntervalSeconds])
 
   return <div ref={hostRef} style={{ width: '100%', height: '100%' }} />
 }

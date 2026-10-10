@@ -7,4 +7,6 @@ export type GameCanvasProps = {
   pausedRef: { current: boolean }
   keyboardRef: { current: HeldControls }
   touchRef: { current: TouchInput }
+  matchSeconds: number
+  spawnIntervalSeconds: number
 }
