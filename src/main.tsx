@@ -6,13 +6,7 @@ import { queryClient } from './queryClient'
 import './components/ui/ui.css'
 import './index.css'
 
-async function boot() {
-  try {
-    const { worker } = await import('./mocks/browser')
-    await worker.start({ onUnhandledRequest: 'bypass', quiet: true })
-  } catch (error) {
-    console.error(error)
-  }
+function renderApp() {
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>
@@ -20,6 +14,16 @@ async function boot() {
       </QueryClientProvider>
     </StrictMode>,
   )
+}
+
+async function boot() {
+  renderApp()
+  try {
+    const { worker } = await import('./mocks/browser')
+    await worker.start({ onUnhandledRequest: 'bypass', quiet: true })
+  } catch (error) {
+    console.error(error)
+  }
 }
 
 void boot()
