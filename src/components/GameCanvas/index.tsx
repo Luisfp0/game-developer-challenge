@@ -1,7 +1,8 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Application, Assets, Container, Graphics, Sprite, Texture } from 'pixi.js'
 import { ASSET_URLS } from '../../constants/assets'
 import { ARENA_HEIGHT, ARENA_WIDTH, TILE_SIZE } from '../../constants/gameConfig'
+import { hullFlames } from '../../game/effects'
 import { appliedSeconds } from '../../game/pause'
 import { controlsFromTouch } from '../../game/touch'
 import { createMatch } from '../../game/simulation'
@@ -10,6 +11,43 @@ import type { MatchSnapshot } from '../../types/game'
 import type { GameCanvasProps } from './types'
 
 const BAR_SCALE = 0.35
+const SHOT_SECONDS = 0.15
+const HIT_SECONDS = 0.15
+const EXPLODE_SECONDS = 0.4
+
+type BurstKind = 'shot' | 'hit' | 'explode'
+type Flames = { one: Sprite; two: Sprite }
+
+function burstLife(kind: BurstKind): number {
+  if (kind === 'explode') return EXPLODE_SECONDS
+  if (kind === 'hit') return HIT_SECONDS
+  return SHOT_SECONDS
+}
+
+function burstScale(kind: BurstKind): number {
+  if (kind === 'shot') return 0.45
+  if (kind === 'hit') return 0.7
+  return 1
+}
+
+function attachFlames(ship: Sprite, fire1: Texture, fire2: Texture): Flames {
+  const one = new Sprite(fire1)
+  const two = new Sprite(fire2)
+  one.anchor.set(0.5)
+  two.anchor.set(0.5)
+  one.position.set(0, 22)
+  two.position.set(-12, 30)
+  one.visible = false
+  two.visible = false
+  ship.addChild(one, two)
+  return { one, two }
+}
+
+function showFlames(flames: Flames, health: number, maxHealth: number): void {
+  const count = hullFlames(health, maxHealth)
+  flames.one.visible = count >= 1
+  flames.two.visible = count >= 2
+}
 
 type HealthBar = {
   view: Container
@@ -80,6 +118,10 @@ export function GameCanvas({
   const hostRef = useRef<HTMLDivElement>(null)
   const onSnapshotRef = useRef(onSnapshot)
   const onLoadErrorRef = useRef(onLoadError)
+  const [loading, setLoading] = useState<{ loaded: number; total: number } | null>({
+    loaded: 0,
+    total: Object.keys(ASSET_URLS).length,
+  })
   onSnapshotRef.current = onSnapshot
   onLoadErrorRef.current = onLoadError
 
@@ -116,10 +158,19 @@ export function GameCanvas({
 
       let textures: Record<keyof typeof ASSET_URLS, Texture>
       try {
-        const entries = await Promise.all(
-          Object.entries(ASSET_URLS).map(async ([key, url]) => [key, await Assets.load<Texture>(url)] as const),
+        const entries = Object.entries(ASSET_URLS)
+        const loadedTextures: Partial<Record<keyof typeof ASSET_URLS, Texture>> = {}
+        let loaded = 0
+        if (alive) setLoading({ loaded, total: entries.length })
+        await Promise.all(
+          entries.map(async ([key, url]) => {
+            const texture = await Assets.load<Texture>(url)
+            loadedTextures[key as keyof typeof ASSET_URLS] = texture
+            loaded += 1
+            if (alive) setLoading({ loaded, total: entries.length })
+          }),
         )
-        textures = Object.fromEntries(entries) as Record<keyof typeof ASSET_URLS, Texture>
+        textures = loadedTextures as Record<keyof typeof ASSET_URLS, Texture>
       } catch (error) {
         if (alive) onLoadErrorRef.current(error instanceof Error ? error.message : 'Could not load the artwork')
         return
@@ -153,6 +204,7 @@ export function GameCanvas({
 
       const player = new Sprite(textures.playerShip)
       player.anchor.set(0.5)
+      const playerFlames = attachFlames(player, textures.fire1, textures.fire2)
       const shots = Array.from({ length: 7 }, () => {
         const sprite = new Sprite(textures.cannonball)
         sprite.anchor.set(0.5)
@@ -160,21 +212,87 @@ export function GameCanvas({
         return sprite
       })
       const playerBar = healthBar(textures.playerHealthFrame, textures.playerHealthFill)
-      const enemyViews = new Map<number, { sprite: Sprite; bar: HealthBar }>()
-      world.addChild(player, ...shots, playerBar.view)
+      const enemyViews = new Map<number, { sprite: Sprite; bar: HealthBar; flames: Flames }>()
+      const effects = new Container()
+      const explosionTextures = [textures.explosion1, textures.explosion2, textures.explosion3]
+      const burstPool: Sprite[] = []
+      const bursts: { sprite: Sprite; kind: BurstKind; age: number }[] = []
+      world.addChild(player, ...shots, playerBar.view, effects)
+
+      function spawnBurst(x: number, y: number, kind: BurstKind) {
+        let sprite = burstPool.find((item) => !item.visible)
+        if (!sprite) {
+          sprite = new Sprite(explosionTextures[0])
+          sprite.anchor.set(0.5)
+          effects.addChild(sprite)
+          burstPool.push(sprite)
+        }
+        sprite.texture = explosionTextures[0]
+        sprite.position.set(x, y)
+        sprite.scale.set(burstScale(kind))
+        sprite.visible = true
+        bursts.push({ sprite, kind, age: 0 })
+      }
+
+      function tickBursts(dt: number) {
+        for (let index = bursts.length - 1; index >= 0; index -= 1) {
+          const burst = bursts[index]
+          burst.age += dt
+          if (burst.age >= burstLife(burst.kind)) {
+            burst.sprite.visible = false
+            bursts.splice(index, 1)
+            continue
+          }
+          if (burst.kind === 'explode') {
+            const frame = Math.min(2, Math.floor((burst.age / EXPLODE_SECONDS) * 3))
+            burst.sprite.texture = explosionTextures[frame]
+          }
+        }
+      }
+
+      let previous: MatchSnapshot | null = null
 
       const draw = (snap: MatchSnapshot) => {
+        if (previous) {
+          for (const shot of snap.projectiles) {
+            if (!previous.projectiles.some((prior) => prior.id === shot.id)) {
+              spawnBurst(shot.x, shot.y, 'shot')
+            }
+          }
+          if (previous.ship.health > 0 && snap.ship.health <= 0) {
+            spawnBurst(snap.ship.x, snap.ship.y, 'explode')
+          } else if (snap.ship.health > 0 && snap.ship.health < previous.ship.health) {
+            spawnBurst(snap.ship.x, snap.ship.y, 'hit')
+          }
+          for (const enemy of snap.enemies) {
+            const prior = previous.enemies.find((item) => item.id === enemy.id)
+            if (!prior) continue
+            if (prior.alive && !enemy.alive) spawnBurst(enemy.x, enemy.y, 'explode')
+            else if (enemy.alive && enemy.health < prior.health) spawnBurst(enemy.x, enemy.y, 'hit')
+          }
+        }
+        previous = snap
+
         island.position.set(snap.island.x, snap.island.y)
-        player.position.set(snap.ship.x, snap.ship.y)
-        player.rotation = snap.ship.rotation
+        const shipAlive = snap.ship.health > 0
+        player.visible = shipAlive
+        playerBar.view.visible = shipAlive
+        if (shipAlive) {
+          player.position.set(snap.ship.x, snap.ship.y)
+          player.rotation = snap.ship.rotation
+          showFlames(playerFlames, snap.ship.health, snap.ship.maxHealth)
+          playerBar.setRatio(snap.ship.maxHealth === 0 ? 0 : snap.ship.health / snap.ship.maxHealth)
+          playerBar.view.position.set(snap.ship.x - playerBar.width / 2, snap.ship.y - 58)
+        }
         for (const enemy of snap.enemies) {
           let view = enemyViews.get(enemy.id)
           if (!view) {
             const sprite = new Sprite(enemy.kind === 'shooter' ? textures.shooterShip : textures.chaserShip)
             sprite.anchor.set(0.5)
+            const flames = attachFlames(sprite, textures.fire1, textures.fire2)
             const bar = healthBar(textures.enemyHealthFrame, textures.enemyHealthFill)
             world.addChild(sprite, bar.view)
-            view = { sprite, bar }
+            view = { sprite, bar, flames }
             enemyViews.set(enemy.id, view)
           }
           view.sprite.visible = enemy.alive
@@ -182,6 +300,7 @@ export function GameCanvas({
           if (!enemy.alive) continue
           view.sprite.position.set(enemy.x, enemy.y)
           view.sprite.rotation = enemy.rotation
+          showFlames(view.flames, enemy.health, enemy.maxHealth)
           view.bar.setRatio(enemy.maxHealth === 0 ? 0 : enemy.health / enemy.maxHealth)
           view.bar.view.position.set(enemy.x - view.bar.width / 2, enemy.y - 58)
         }
@@ -197,22 +316,33 @@ export function GameCanvas({
           sprite.visible = projectile !== undefined
           if (projectile) sprite.position.set(projectile.x, projectile.y)
         })
-        playerBar.setRatio(snap.ship.maxHealth === 0 ? 0 : snap.ship.health / snap.ship.maxHealth)
-        playerBar.view.position.set(snap.ship.x - playerBar.width / 2, snap.ship.y - 58)
+        world.addChild(effects)
       }
 
       draw(match.snapshot())
-      const unsubscribe = match.subscribe((snap) => onSnapshotRef.current(snap))
+      if (alive) setLoading(null)
+      let resultTimer = 0
+      const unsubscribe = match.subscribe((snap) => {
+        if (snap.phase !== 'result' || snap.endReason !== 'destroyed') {
+          onSnapshotRef.current(snap)
+          return
+        }
+        resultTimer = window.setTimeout(() => {
+          if (alive) onSnapshotRef.current(snap)
+        }, EXPLODE_SECONDS * 1000)
+      })
 
       const tick = () => {
         const seconds = appliedSeconds(next.ticker.deltaMS / 1000, pausedRef.current || document.hidden)
         if (seconds === 0) return
+        tickBursts(seconds)
         const touch = controlsFromTouch(match.snapshot().ship.rotation, touchRef.current)
         const snap = match.update(seconds, mergeControls(keyboardRef.current, touch))
         draw(snap)
       }
       next.ticker.add(tick)
       stop = () => {
+        window.clearTimeout(resultTimer)
         next.ticker.remove(tick)
         unsubscribe()
       }
@@ -227,5 +357,28 @@ export function GameCanvas({
     }
   }, [pausedRef, keyboardRef, touchRef, matchSeconds, spawnIntervalSeconds])
 
-  return <div ref={hostRef} style={{ width: '100%', height: '100%' }} />
+  return (
+    <div ref={hostRef} style={{ position: 'relative', width: '100%', height: '100%' }}>
+      {loading ? (
+        <div
+          role="status"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            zIndex: 2,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+          }}
+        >
+          <p>Loading artwork</p>
+          <p>
+            {loading.loaded} of {loading.total}
+          </p>
+        </div>
+      ) : null}
+    </div>
+  )
 }
