@@ -1,3 +1,6 @@
+#APLICAÇÃO NA VERCEL
+https://game-developer-challenge-dusky.vercel.app/
+
 # Pirate Battle
 
 Shooter naval 2D em visão superior. O jogador navega entre ilhas, atira nos navios inimigos e a partida termina quando o tempo acaba ou o navio é destruído. A arena é desenhada com PixiJS. A simulação da partida roda em TypeScript
