@@ -1,9 +1,6 @@
-export type VolleyShot = {
-  x: number
-  y: number
-  vx: number
-  vy: number
-}
+import type { VolleyShot } from './types'
+
+export type { VolleyShot }
 
 const facing = (rotation: number) => {
   return { x: Math.sin(rotation), y: -Math.cos(rotation) }

@@ -1,11 +1,11 @@
-import { readMatchHistory } from '../game/lastMatch'
-import type { OptionsStorage } from '../game/options'
-import type { Player } from '../game/player'
-import { isMatchRecord, registerMatch, type MatchRecord } from '../game/records'
-import { FIXTURES } from './fixtures'
+import { readMatchHistory } from '../../game/lastMatch'
+import type { OptionsStorage } from '../../game/options'
+import type { Player } from '../../game/player'
+import { isMatchRecord, registerMatch, type MatchRecord } from '../../game/records'
+import { FIXTURES } from '../fixtures'
+import { CONFIRMED_MATCHES_KEY, HISTORY_MIGRATED_KEY } from './constants'
 
-export const CONFIRMED_MATCHES_KEY = 'pirate-battle-confirmed-matches'
-export const HISTORY_MIGRATED_KEY = 'pirate-battle-history-migrated'
+export { CONFIRMED_MATCHES_KEY, HISTORY_MIGRATED_KEY }
 
 export const readConfirmed = (storage: OptionsStorage): MatchRecord[] => {
   const raw = storage.getItem(CONFIRMED_MATCHES_KEY)

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Application, Assets, Container, Graphics, Sprite, Texture } from 'pixi.js'
+import { Application, Assets, Container, Sprite, Texture } from 'pixi.js'
 import { ASSET_URLS } from '../../constants/assets'
 import { ARENA_HEIGHT, ARENA_WIDTH, ISLANDS, TILE_SIZE } from '../../constants/gameConfig'
 import { fittedArenaSize } from '../../game/canvas'
@@ -8,60 +8,14 @@ import { controlsFromTouch } from '../../game/touch'
 import { createMatch } from '../../game/simulation'
 import { mergeControls } from '../../hooks/useKeyboard'
 import type { MatchSnapshot } from '../../types/game'
-import type { BurstKind, Flames, GameCanvasProps, HealthBar } from './types'
-import { BAR_SCALE, EXPLODE_SECONDS } from './constants'
-import { attachFlames, burstLife, burstScale, showFlames } from './utils'
-
-const opaqueInset = (texture: Texture): { x: number; y: number; width: number; height: number } => {
-  const width = texture.width
-  const height = texture.height
-  const full = { x: 0, y: 0, width, height }
-  const resource = texture.source.resource
-  if (!resource) return full
-  const canvas = document.createElement('canvas')
-  canvas.width = width
-  canvas.height = height
-  const context = canvas.getContext('2d', { willReadFrequently: true })
-  if (!context) return full
-  context.drawImage(resource as CanvasImageSource, 0, 0, width, height)
-  const pixels = context.getImageData(0, 0, width, height).data
-  let minX = width
-  let minY = height
-  let maxX = -1
-  let maxY = -1
-  for (let y = 0; y < height; y += 1) {
-    for (let x = 0; x < width; x += 1) {
-      if (pixels[(y * width + x) * 4 + 3] <= 16) continue
-      if (x < minX) minX = x
-      if (y < minY) minY = y
-      if (x > maxX) maxX = x
-      if (y > maxY) maxY = y
-    }
-  }
-  if (maxX < minX) return full
-  return { x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1 }
-}
-
-const healthBar = (frame: Texture, fill: Texture): HealthBar => {
-  const view = new Container()
-  const frameSprite = new Sprite(frame)
-  const fillSprite = new Sprite(fill)
-  frameSprite.scale.set(BAR_SCALE)
-  fillSprite.scale.set(BAR_SCALE)
-  const inset = opaqueInset(fill)
-  const mask = new Graphics()
-  fillSprite.mask = mask
-  view.addChild(frameSprite, fillSprite, mask)
-  const setRatio = (ratio: number) => {
-    const clamped = Math.min(1, Math.max(0, ratio))
-    mask.clear()
-    mask
-      .rect(inset.x * BAR_SCALE, inset.y * BAR_SCALE, inset.width * BAR_SCALE * clamped, inset.height * BAR_SCALE)
-      .fill(0xffffff)
-  }
-  setRatio(1)
-  return { view, width: frame.width * BAR_SCALE, setRatio }
-}
+import type { GameCanvasProps } from './types'
+import { burstLife, burstScale, explosionFrame } from './utils/bursts'
+import { EXPLODE_SECONDS } from './utils/bursts/constants'
+import type { BurstKind } from './utils/bursts/types'
+import { attachFlames, showFlames } from './utils/flames'
+import type { Flames } from './utils/flames/types'
+import { healthBar } from './utils/healthBar'
+import type { HealthBar } from './utils/healthBar/types'
 
 export const GameCanvas = ({
   onSnapshot,
@@ -222,8 +176,7 @@ export const GameCanvas = ({
             continue
           }
           if (burst.kind === 'explode') {
-            const frame = Math.min(2, Math.floor((burst.age / EXPLODE_SECONDS) * 3))
-            burst.sprite.texture = explosionTextures[frame]
+            burst.sprite.texture = explosionTextures[explosionFrame(burst.age)]
           }
         }
       }

@@ -1,13 +1,7 @@
 import type { HeldControls } from '../../types/game'
+import type { Stick, TouchInput } from './types'
 
-export type Stick = { x: number; y: number }
-
-export type TouchInput = {
-  stick: Stick | null
-  fire: boolean
-  fireLeft: boolean
-  fireRight: boolean
-}
+export type { Stick, TouchInput }
 
 const EMPTY: HeldControls = {
   forward: false,

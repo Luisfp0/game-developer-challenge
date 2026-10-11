@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { stepWhole } from './step'
+import { stepWhole } from './index'
 
 describe('stepWhole', () => {
   it('steps inside the range', () => {

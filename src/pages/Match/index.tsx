@@ -3,20 +3,9 @@ import { GameCanvas } from '../../components/GameCanvas'
 import { Hud } from '../../components/Hud'
 import { PauseOverlay } from '../../components/PauseOverlay'
 import { TouchControls } from '../../components/TouchControls'
-import { UI_ASSETS } from '../../components/ui/assets'
 import { useKeyboard } from '../../hooks/useKeyboard'
 import { useTouchControls } from '../../hooks/useTouchControls'
-import type { MatchSnapshot } from '../../types/game'
-
-type MatchPageProps = {
-  score: number
-  remainingSeconds: number
-  matchSeconds: number
-  spawnIntervalSeconds: number
-  onSnapshot: (snapshot: MatchSnapshot) => void
-  onLoadError: (message: string) => void
-  onMainMenu: () => void
-}
+import type { MatchPageProps } from './types'
 
 export const MatchPage = ({
   score,

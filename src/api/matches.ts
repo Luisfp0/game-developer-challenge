@@ -1,7 +1,7 @@
 import axios from 'axios'
 import type { MatchConfig, MatchPage, MatchRecord } from '../game/records'
 
-export const api = axios.create({ baseURL: '/api', timeout: 3000 })
+const api = axios.create({ baseURL: '/api', timeout: 3000 })
 
 export const fetchRanking = async (config: MatchConfig, page: number, signal?: AbortSignal): Promise<MatchPage> => {
   const { data } = await api.get<MatchPage>('/ranking', {

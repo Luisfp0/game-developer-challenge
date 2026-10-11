@@ -1,36 +1,14 @@
 import { GAME_CONFIG } from '../../constants/gameConfig'
+import { OPTIONS_STORAGE_KEY, SESSION_TIME_ERROR, SPAWN_TIME_ERROR } from './constants'
+import type { FieldErrors, OptionsStorage, SavedOptions } from './types'
+import { wholeInRange } from './utils/wholeInRange'
 
-export const OPTIONS_STORAGE_KEY = 'pirate-battle-options'
-
-export const SESSION_TIME_ERROR = 'Game session time must be a whole number from 60 to 180.'
-export const SPAWN_TIME_ERROR = 'Enemy spawn time must be a whole number from 5 to 30.'
-
-export type SavedOptions = {
-  matchSeconds: number
-  spawnIntervalSeconds: number
-}
-
-export type OptionsStorage = {
-  getItem(key: string): string | null
-  setItem(key: string, value: string): void
-}
-
-export type FieldErrors = {
-  matchSeconds: string | null
-  spawnIntervalSeconds: string | null
-}
+export { OPTIONS_STORAGE_KEY, SESSION_TIME_ERROR, SPAWN_TIME_ERROR }
+export type { FieldErrors, OptionsStorage, SavedOptions }
 
 const DEFAULT_OPTIONS: SavedOptions = {
   matchSeconds: GAME_CONFIG.matchSeconds,
   spawnIntervalSeconds: GAME_CONFIG.spawnIntervalSeconds,
-}
-
-const wholeInRange = (value: string, min: number, max: number): number | null => {
-  const trimmed = value.trim()
-  if (!/^\d+$/.test(trimmed)) return null
-  const number = Number(trimmed)
-  if (number < min || number > max) return null
-  return number
 }
 
 export const fieldErrors = (matchSeconds: string, spawnIntervalSeconds: string): FieldErrors => {

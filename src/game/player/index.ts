@@ -1,11 +1,9 @@
 import type { OptionsStorage } from '../options'
+import { PLAYER_STORAGE_KEY } from './constants'
+import type { Player } from './types'
 
-export const PLAYER_STORAGE_KEY = 'pirate-battle-player'
-
-export type Player = {
-  id: string
-  name: string
-}
+export { PLAYER_STORAGE_KEY }
+export type { Player }
 
 const isPlayer = (value: unknown): value is Player => {
   if (!value || typeof value !== 'object') return false

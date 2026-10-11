@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import type { HeldControls } from '../../types/game'
+import { controlsFromKeys } from './utils/controlsFromKeys'
 
 const EMPTY: HeldControls = {
   forward: false,
@@ -8,28 +9,6 @@ const EMPTY: HeldControls = {
   fire: false,
   fireLeft: false,
   fireRight: false,
-}
-
-export const controlsFromKeys = (keys: Set<string>): HeldControls => {
-  return {
-    forward: keys.has('KeyW') || keys.has('ArrowUp'),
-    left: keys.has('KeyA') || keys.has('ArrowLeft'),
-    right: keys.has('KeyD') || keys.has('ArrowRight'),
-    fire: keys.has('Space'),
-    fireLeft: keys.has('KeyQ'),
-    fireRight: keys.has('KeyE'),
-  }
-}
-
-export const mergeControls = (keyboard: HeldControls, touch: HeldControls): HeldControls => {
-  return {
-    forward: keyboard.forward || touch.forward,
-    left: keyboard.left || touch.left,
-    right: keyboard.right || touch.right,
-    fire: keyboard.fire || touch.fire,
-    fireLeft: keyboard.fireLeft || touch.fireLeft,
-    fireRight: keyboard.fireRight || touch.fireRight,
-  }
 }
 
 export const useKeyboard = (pausedRef: { current: boolean }): {
@@ -77,3 +56,6 @@ export const useKeyboard = (pausedRef: { current: boolean }): {
 
   return { controls, clear }
 }
+
+export { controlsFromKeys }
+export { mergeControls } from './utils/mergeControls'

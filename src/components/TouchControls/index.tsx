@@ -1,37 +1,9 @@
 import { useRef, useState } from 'react'
 import type { PointerEvent } from 'react'
 import { stickFromDrag } from '../../game/touch'
+import { HoldButton } from './components/HoldButton'
+import { KNOB, PAD, RADIUS } from './constants'
 import type { TouchControlsProps } from './types'
-
-const PAD = 132
-const KNOB = 52
-const RADIUS = 40
-
-const fireStyle = {
-  minWidth: 76,
-  minHeight: 56,
-  touchAction: 'none' as const,
-  userSelect: 'none' as const,
-}
-
-const holdButton = (label: string, onHeld: (held: boolean) => void) => {
-  return (
-    <button
-      type="button"
-      style={fireStyle}
-      onPointerDown={(event) => {
-        event.preventDefault()
-        onHeld(true)
-      }}
-      onPointerUp={() => onHeld(false)}
-      onPointerCancel={() => onHeld(false)}
-      onPointerLeave={() => onHeld(false)}
-      onContextMenu={(event) => event.preventDefault()}
-    >
-      {label}
-    </button>
-  )
-}
 
 export const TouchControls = ({ onStick, onFire, onFireLeft, onFireRight }: TouchControlsProps) => {
   const padRef = useRef<HTMLDivElement>(null)
@@ -120,10 +92,10 @@ export const TouchControls = ({ onStick, onFire, onFireLeft, onFireRight }: Touc
         }}
       >
         <div style={{ display: 'flex', gap: 8 }}>
-          {holdButton('Left fire', onFireLeft)}
-          {holdButton('Right fire', onFireRight)}
+          <HoldButton label="Left fire" onHeld={onFireLeft} />
+          <HoldButton label="Right fire" onHeld={onFireRight} />
         </div>
-        {holdButton('Fire', onFire)}
+        <HoldButton label="Fire" onHeld={onFire} />
       </div>
     </div>
   )

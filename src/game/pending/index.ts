@@ -1,7 +1,8 @@
 import type { OptionsStorage } from '../options'
 import { isMatchRecord, type MatchRecord } from '../records'
+import { PENDING_MATCHES_KEY } from './constants'
 
-export const PENDING_MATCHES_KEY = 'pirate-battle-pending-matches'
+export { PENDING_MATCHES_KEY }
 
 export const readPending = (storage: OptionsStorage): MatchRecord[] => {
   const raw = storage.getItem(PENDING_MATCHES_KEY)

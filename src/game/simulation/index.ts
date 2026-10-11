@@ -1,78 +1,22 @@
 import {
   ARENA_HEIGHT,
   ARENA_WIDTH,
-  CHASER_START,
   GAME_CONFIG,
   ISLANDS,
-  PLAYER_START,
   TILE_SIZE,
 } from '../../constants/gameConfig'
 import type { Enemy } from '../../types/enemy'
 import type { HeldControls, MatchSnapshot } from '../../types/game'
 import type { Projectile } from '../../types/projectile'
-import type { Ship } from '../../types/ship'
 import { sideVolley } from '../broadside'
 import { circleHitsRoundRect, circlesOverlap, clampToArena, pushOutOfRoundRect } from '../collision'
 import { spawnPoint } from '../spawn'
+import type { Match, MatchSeed } from './types'
+import { clampMatchSeconds, clampSpawnInterval } from './utils/clampConfig'
+import { facing } from './utils/facing'
+import { createChaser, createShip } from './utils/ships'
 
-export type MatchSeed = {
-  ship?: Partial<Pick<Ship, 'x' | 'y' | 'rotation'>>
-  chaser?: Partial<Pick<Enemy, 'x' | 'y'>>
-  shooters?: { x: number; y: number }[]
-  matchSeconds?: number
-  spawnIntervalSeconds?: number
-}
-
-export type Match = {
-  snapshot: () => MatchSnapshot
-  update: (dtSeconds: number, controls: HeldControls) => MatchSnapshot
-  subscribe: (listener: (snapshot: MatchSnapshot) => void) => () => void
-}
-
-const facing = (rotation: number): { x: number; y: number } => {
-  return { x: Math.sin(rotation), y: -Math.cos(rotation) }
-}
-
-const createShip = (seed?: MatchSeed['ship']): Ship => {
-  return {
-    x: seed?.x ?? PLAYER_START.x,
-    y: seed?.y ?? PLAYER_START.y,
-    rotation: seed?.rotation ?? PLAYER_START.rotation,
-    health: GAME_CONFIG.playerHealth,
-    maxHealth: GAME_CONFIG.playerHealth,
-    radius: GAME_CONFIG.shipRadius,
-  }
-}
-
-const createChaser = (seed?: MatchSeed['chaser']): Enemy => {
-  return {
-    id: 1,
-    kind: 'chaser',
-    x: seed?.x ?? CHASER_START.x,
-    y: seed?.y ?? CHASER_START.y,
-    rotation: 0,
-    health: GAME_CONFIG.chaserHealth,
-    maxHealth: GAME_CONFIG.chaserHealth,
-    radius: GAME_CONFIG.shipRadius,
-    alive: true,
-  }
-}
-
-const clampMatchSeconds = (requested?: number): number => {
-  if (requested === undefined) return GAME_CONFIG.matchSeconds
-  return Math.min(
-    GAME_CONFIG.matchSecondsMax,
-    Math.max(GAME_CONFIG.matchSecondsMin, requested),
-  )
-}
-
-const clampSpawnInterval = (requested?: number): number => {
-  if (requested === undefined) return GAME_CONFIG.spawnIntervalSeconds
-  return Math.min(
-    GAME_CONFIG.spawnIntervalMax,
-    Math.max(GAME_CONFIG.spawnIntervalMin, requested),
-  )
-}
+export type { Match, MatchSeed }
 
 export const createMatch = (seed?: MatchSeed): Match => {
   const ship = createShip(seed?.ship)

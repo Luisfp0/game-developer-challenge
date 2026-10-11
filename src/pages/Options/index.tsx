@@ -1,14 +1,9 @@
 import { useState } from 'react'
 import { OptionsForm } from '../../components/OptionsForm'
 import { fieldErrors, optionsFromFields, readOptions, writeOptions } from '../../game/options'
+import type { OptionsPageProps } from './types'
 
-type OptionsPageProps = {
-  onBack: () => void
-  onSaved: () => void
-  onSaveFailed: () => void
-}
-
-export const OptionsPage = ({ onBack, onSaved, onSaveFailed }: OptionsPageProps) => {
+export const OptionsPage = ({ onBack }: OptionsPageProps) => {
   const [matchSeconds, setMatchSeconds] = useState(() => String(readOptions(localStorage).matchSeconds))
   const [spawnIntervalSeconds, setSpawnIntervalSeconds] = useState(() =>
     String(readOptions(localStorage).spawnIntervalSeconds),

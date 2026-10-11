@@ -6,39 +6,9 @@ import { dropPending, readPending, savePending } from '../../game/pending'
 import { readOptions } from '../../game/options'
 import { readPlayer } from '../../game/player'
 import { PAGE_SIZE, type MatchRecord } from '../../game/records'
-
-type LogTab = 'ranking' | 'history'
-
-type LogPageProps = {
-  tab: LogTab
-  onTab: (tab: LogTab) => void
-  onBack: () => void
-}
-
-const playedAtLabel = (playedAt: string): string => {
-  const date = new Date(playedAt)
-  if (Number.isNaN(date.getTime())) return playedAt
-  const month = date.toLocaleString('en-US', { month: 'short' }).toUpperCase()
-  const day = String(date.getDate()).padStart(2, '0')
-  const hours = String(date.getHours()).padStart(2, '0')
-  const minutes = String(date.getMinutes()).padStart(2, '0')
-  return `${day} ${month} · ${hours}:${minutes}`
-}
-
-const durationLabel = (seconds: number): string => {
-  const total = Math.max(0, Math.round(seconds))
-  const minutes = Math.floor(total / 60)
-  const rest = total % 60
-  return `${String(minutes).padStart(2, '0')}:${String(rest).padStart(2, '0')}`
-}
-
-const reasonLabel = (endReason: MatchRecord['endReason']): string => {
-  return endReason === 'time' ? 'Time is up' : 'Destroyed'
-}
-
-const pageCountOf = (total: number, pageSize: number): number => {
-  return Math.max(1, Math.ceil(total / (pageSize || PAGE_SIZE)))
-}
+import type { LogPageProps } from './types'
+import { durationLabel, playedAtLabel, reasonLabel } from './utils/labels'
+import { pageCountOf } from './utils/pageCount'
 
 export const LogPage = ({ tab, onTab, onBack }: LogPageProps) => {
   const [player] = useState(() => readPlayer(localStorage, () => crypto.randomUUID()))

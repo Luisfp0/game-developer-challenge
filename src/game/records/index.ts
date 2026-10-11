@@ -1,32 +1,9 @@
 import { GAME_CONFIG } from '../../constants/gameConfig'
+import { PAGE_SIZE } from './constants'
+import type { MatchConfig, MatchEndReason, MatchPage, MatchRecord } from './types'
 
-export const PAGE_SIZE = 10
-
-export type MatchEndReason = 'time' | 'destroyed'
-
-export type MatchRecord = {
-  matchId: string
-  playerId: string
-  playerName: string
-  playedAt: string
-  score: number
-  timePlayedSeconds: number
-  endReason: MatchEndReason
-  matchSeconds: number
-  spawnIntervalSeconds: number
-}
-
-export type MatchConfig = {
-  matchSeconds: number
-  spawnIntervalSeconds: number
-}
-
-export type MatchPage = {
-  items: MatchRecord[]
-  page: number
-  pageSize: number
-  total: number
-}
+export { PAGE_SIZE }
+export type { MatchConfig, MatchEndReason, MatchPage, MatchRecord }
 
 export const paginate = (items: MatchRecord[], page: number, pageSize = PAGE_SIZE): MatchPage => {
   const safePage = Number.isInteger(page) && page > 0 ? page : 1

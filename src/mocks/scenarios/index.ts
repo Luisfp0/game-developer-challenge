@@ -1,10 +1,9 @@
-import type { OptionsStorage } from '../game/options'
+import type { OptionsStorage } from '../../game/options'
+import { NETWORK_SCENARIO_KEY, NETWORK_SCENARIOS } from './constants'
+import type { NetworkScenario } from './types'
 
-export const NETWORK_SCENARIO_KEY = 'pirate-battle-network'
-
-export const NETWORK_SCENARIOS = ['success', 'empty', 'slow', 'timeout', 'error'] as const
-
-export type NetworkScenario = (typeof NETWORK_SCENARIOS)[number]
+export { NETWORK_SCENARIO_KEY, NETWORK_SCENARIOS }
+export type { NetworkScenario }
 
 export const readScenario = (storage: OptionsStorage): NetworkScenario => {
   const raw = storage.getItem(NETWORK_SCENARIO_KEY)

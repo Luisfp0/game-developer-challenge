@@ -1,5 +1,4 @@
-type Circle = { x: number; y: number; radius: number }
-type Rect = { x: number; y: number; width: number; height: number }
+import type { Circle, Rect } from './types'
 
 export const circlesOverlap = (a: Circle, b: Circle): boolean => {
   const dx = a.x - b.x

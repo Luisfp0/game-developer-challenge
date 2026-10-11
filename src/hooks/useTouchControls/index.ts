@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Stick, TouchInput } from '../../game/touch'
+import { TOUCH_MAX_WIDTH_PX } from './constants'
 
 const EMPTY: TouchInput = { stick: null, fire: false, fireLeft: false, fireRight: false }
 
-export const TOUCH_MAX_WIDTH_PX = 768
+export { TOUCH_MAX_WIDTH_PX }
 
 export const useTouchControls = (pausedRef: { current: boolean }): {
   input: { current: TouchInput }

@@ -1,15 +1,7 @@
 import { circleHitsRect } from '../collision'
+import { SPAWN_POINTS } from './constants'
 
-export const SPAWN_POINTS = [
-  { x: 928, y: 96 },
-  { x: 928, y: 384 },
-  { x: 928, y: 672 },
-  { x: 512, y: 96 },
-  { x: 512, y: 672 },
-  { x: 96, y: 96 },
-  { x: 96, y: 384 },
-  { x: 96, y: 672 },
-]
+export { SPAWN_POINTS }
 
 export const spawnPoint = (args: {
   x: number

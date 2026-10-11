@@ -1,21 +1,10 @@
 import { GAME_CONFIG } from '../../constants/gameConfig'
-import type { EndReason } from '../../types/game'
 import type { OptionsStorage } from '../options'
+import { LAST_MATCH_STORAGE_KEY, MATCH_HISTORY_LIMIT, MATCH_NOT_SAVED, MATCH_SAVED } from './constants'
+import type { LastMatch } from './types'
 
-export const LAST_MATCH_STORAGE_KEY = 'pirate-battle-last-match'
-export const MATCH_HISTORY_LIMIT = 20
-
-export const MATCH_SAVED = 'Match saved.'
-export const MATCH_NOT_SAVED = 'Match could not be saved.'
-
-export type LastMatch = {
-  score: number
-  timePlayedSeconds: number
-  endReason: EndReason
-  matchSeconds: number
-  spawnIntervalSeconds: number
-  playedAt: string
-}
+export { LAST_MATCH_STORAGE_KEY, MATCH_HISTORY_LIMIT, MATCH_NOT_SAVED, MATCH_SAVED }
+export type { LastMatch }
 
 const wholeInRange = (value: unknown, min: number, max: number): value is number => {
   return typeof value === 'number' && Number.isInteger(value) && value >= min && value <= max
