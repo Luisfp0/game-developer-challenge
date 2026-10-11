@@ -5,7 +5,7 @@ const EMPTY: TouchInput = { stick: null, fire: false, fireLeft: false, fireRight
 
 export const TOUCH_MAX_WIDTH_PX = 768
 
-export function useTouchControls(pausedRef: { current: boolean }): {
+export const useTouchControls = (pausedRef: { current: boolean }): {
   input: { current: TouchInput }
   clear: () => void
   setStick: (stick: Stick | null) => void
@@ -13,7 +13,7 @@ export function useTouchControls(pausedRef: { current: boolean }): {
   setFireLeft: (held: boolean) => void
   setFireRight: (held: boolean) => void
   narrow: boolean
-} {
+} => {
   const input = useRef<TouchInput>({ ...EMPTY })
   const [narrow, setNarrow] = useState(
     () => window.matchMedia(`(max-width: ${TOUCH_MAX_WIDTH_PX}px)`).matches,

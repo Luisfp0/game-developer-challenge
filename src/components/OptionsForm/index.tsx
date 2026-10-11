@@ -2,7 +2,7 @@ import { GAME_CONFIG } from '../../constants/gameConfig'
 import { GoldButton, NumberStepper, Screen } from '../ui'
 import type { OptionsFormProps } from './types'
 
-export function OptionsForm({
+export const OptionsForm = ({
   matchSeconds,
   spawnIntervalSeconds,
   matchSecondsError,
@@ -11,7 +11,7 @@ export function OptionsForm({
   onSpawnIntervalSecondsChange,
   onSave,
   onBack,
-}: OptionsFormProps) {
+}: OptionsFormProps) => {
   const invalid = matchSecondsError !== null || spawnIntervalSecondsError !== null
 
   return (

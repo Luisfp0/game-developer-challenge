@@ -8,14 +8,14 @@ type OptionsPageProps = {
   onSaveFailed: () => void
 }
 
-export function OptionsPage({ onBack, onSaved, onSaveFailed }: OptionsPageProps) {
+export const OptionsPage = ({ onBack, onSaved, onSaveFailed }: OptionsPageProps) => {
   const [matchSeconds, setMatchSeconds] = useState(() => String(readOptions(localStorage).matchSeconds))
   const [spawnIntervalSeconds, setSpawnIntervalSeconds] = useState(() =>
     String(readOptions(localStorage).spawnIntervalSeconds),
   )
   const errors = fieldErrors(matchSeconds, spawnIntervalSeconds)
 
-  function save() {
+  const save = () => {
     const next = optionsFromFields(matchSeconds, spawnIntervalSeconds)
     if (!next) return
     writeOptions(localStorage, next)

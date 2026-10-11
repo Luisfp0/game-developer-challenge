@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { OptionsStorage } from '../game/options'
 import { migrateSavedMatches, readConfirmed } from './store'
 
-function memory(): OptionsStorage {
+const memory = (): OptionsStorage => {
   const items = new Map<string, string>()
   return {
     getItem: (key) => items.get(key) ?? null,

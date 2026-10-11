@@ -10,7 +10,7 @@ const EMPTY: HeldControls = {
   fireRight: false,
 }
 
-export function controlsFromKeys(keys: Set<string>): HeldControls {
+export const controlsFromKeys = (keys: Set<string>): HeldControls => {
   return {
     forward: keys.has('KeyW') || keys.has('ArrowUp'),
     left: keys.has('KeyA') || keys.has('ArrowLeft'),
@@ -21,7 +21,7 @@ export function controlsFromKeys(keys: Set<string>): HeldControls {
   }
 }
 
-export function mergeControls(keyboard: HeldControls, touch: HeldControls): HeldControls {
+export const mergeControls = (keyboard: HeldControls, touch: HeldControls): HeldControls => {
   return {
     forward: keyboard.forward || touch.forward,
     left: keyboard.left || touch.left,
@@ -32,10 +32,10 @@ export function mergeControls(keyboard: HeldControls, touch: HeldControls): Held
   }
 }
 
-export function useKeyboard(pausedRef: { current: boolean }): {
+export const useKeyboard = (pausedRef: { current: boolean }): {
   controls: { current: HeldControls }
   clear: () => void
-} {
+} => {
   const controls = useRef<HeldControls>({ ...EMPTY })
   const keys = useRef(new Set<string>())
   const blocked = useRef(new Set<string>())

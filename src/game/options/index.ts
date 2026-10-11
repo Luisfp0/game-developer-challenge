@@ -25,7 +25,7 @@ const DEFAULT_OPTIONS: SavedOptions = {
   spawnIntervalSeconds: GAME_CONFIG.spawnIntervalSeconds,
 }
 
-function wholeInRange(value: string, min: number, max: number): number | null {
+const wholeInRange = (value: string, min: number, max: number): number | null => {
   const trimmed = value.trim()
   if (!/^\d+$/.test(trimmed)) return null
   const number = Number(trimmed)
@@ -33,7 +33,7 @@ function wholeInRange(value: string, min: number, max: number): number | null {
   return number
 }
 
-export function fieldErrors(matchSeconds: string, spawnIntervalSeconds: string): FieldErrors {
+export const fieldErrors = (matchSeconds: string, spawnIntervalSeconds: string): FieldErrors => {
   const session = wholeInRange(matchSeconds, GAME_CONFIG.matchSecondsMin, GAME_CONFIG.matchSecondsMax)
   const spawn = wholeInRange(
     spawnIntervalSeconds,
@@ -46,7 +46,7 @@ export function fieldErrors(matchSeconds: string, spawnIntervalSeconds: string):
   }
 }
 
-export function optionsFromFields(matchSeconds: string, spawnIntervalSeconds: string): SavedOptions | null {
+export const optionsFromFields = (matchSeconds: string, spawnIntervalSeconds: string): SavedOptions | null => {
   const session = wholeInRange(matchSeconds, GAME_CONFIG.matchSecondsMin, GAME_CONFIG.matchSecondsMax)
   const spawn = wholeInRange(
     spawnIntervalSeconds,
@@ -57,7 +57,7 @@ export function optionsFromFields(matchSeconds: string, spawnIntervalSeconds: st
   return { matchSeconds: session, spawnIntervalSeconds: spawn }
 }
 
-function isSaved(value: unknown): value is SavedOptions {
+const isSaved = (value: unknown): value is SavedOptions => {
   if (!value || typeof value !== 'object') return false
   const record = value as Record<string, unknown>
   const matchSeconds = record.matchSeconds
@@ -74,7 +74,7 @@ function isSaved(value: unknown): value is SavedOptions {
   )
 }
 
-export function readOptions(storage: OptionsStorage): SavedOptions {
+export const readOptions = (storage: OptionsStorage): SavedOptions => {
   const raw = storage.getItem(OPTIONS_STORAGE_KEY)
   if (raw === null) return { ...DEFAULT_OPTIONS }
   try {
@@ -89,6 +89,6 @@ export function readOptions(storage: OptionsStorage): SavedOptions {
   }
 }
 
-export function writeOptions(storage: OptionsStorage, options: SavedOptions): void {
+export const writeOptions = (storage: OptionsStorage, options: SavedOptions): void => {
   storage.setItem(OPTIONS_STORAGE_KEY, JSON.stringify(options))
 }

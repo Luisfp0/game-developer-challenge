@@ -7,7 +7,7 @@ const STATUS_LABEL = {
   failed: 'Could not be saved.',
 } as const
 
-export function MatchResult({
+export const MatchResult = ({
   score,
   timePlayedSeconds,
   endReason,
@@ -15,7 +15,7 @@ export function MatchResult({
   onRetry,
   onPlayAgain,
   onMainMenu,
-}: MatchResultProps) {
+}: MatchResultProps) => {
   const reason = endReason === 'time' ? 'Time is up' : 'Your ship was destroyed'
   return (
     <Screen>

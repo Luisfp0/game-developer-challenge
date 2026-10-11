@@ -1,9 +1,9 @@
-export function fittedArenaSize(
+export const fittedArenaSize = (
   viewWidth: number,
   viewHeight: number,
   arenaWidth: number,
   arenaHeight: number,
-): { width: number; height: number } {
+): { width: number; height: number } => {
   if (viewWidth <= 0 || viewHeight <= 0 || arenaWidth <= 0 || arenaHeight <= 0) {
     return { width: 0, height: 0 }
   }

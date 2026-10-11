@@ -29,11 +29,11 @@ export type Match = {
   subscribe: (listener: (snapshot: MatchSnapshot) => void) => () => void
 }
 
-function facing(rotation: number): { x: number; y: number } {
+const facing = (rotation: number): { x: number; y: number } => {
   return { x: Math.sin(rotation), y: -Math.cos(rotation) }
 }
 
-function createShip(seed?: MatchSeed['ship']): Ship {
+const createShip = (seed?: MatchSeed['ship']): Ship => {
   return {
     x: seed?.x ?? PLAYER_START.x,
     y: seed?.y ?? PLAYER_START.y,
@@ -44,7 +44,7 @@ function createShip(seed?: MatchSeed['ship']): Ship {
   }
 }
 
-function createChaser(seed?: MatchSeed['chaser']): Enemy {
+const createChaser = (seed?: MatchSeed['chaser']): Enemy => {
   return {
     id: 1,
     kind: 'chaser',
@@ -58,7 +58,7 @@ function createChaser(seed?: MatchSeed['chaser']): Enemy {
   }
 }
 
-function clampMatchSeconds(requested?: number): number {
+const clampMatchSeconds = (requested?: number): number => {
   if (requested === undefined) return GAME_CONFIG.matchSeconds
   return Math.min(
     GAME_CONFIG.matchSecondsMax,
@@ -66,7 +66,7 @@ function clampMatchSeconds(requested?: number): number {
   )
 }
 
-function clampSpawnInterval(requested?: number): number {
+const clampSpawnInterval = (requested?: number): number => {
   if (requested === undefined) return GAME_CONFIG.spawnIntervalSeconds
   return Math.min(
     GAME_CONFIG.spawnIntervalMax,
@@ -74,7 +74,7 @@ function clampSpawnInterval(requested?: number): number {
   )
 }
 
-export function createMatch(seed?: MatchSeed): Match {
+export const createMatch = (seed?: MatchSeed): Match => {
   const ship = createShip(seed?.ship)
   const enemies: Enemy[] = [createChaser(seed?.chaser)]
   const projectiles: Projectile[] = []
@@ -110,7 +110,7 @@ export function createMatch(seed?: MatchSeed): Match {
   const listeners = new Set<(snapshot: MatchSnapshot) => void>()
   let notified = ''
 
-  function snapshot(): MatchSnapshot {
+  const snapshot = (): MatchSnapshot => {
     return {
       phase,
       score,
@@ -125,7 +125,7 @@ export function createMatch(seed?: MatchSeed): Match {
     }
   }
 
-  function notify(): void {
+  const notify = (): void => {
     const current = snapshot()
     const key = [
       current.phase,
@@ -138,13 +138,13 @@ export function createMatch(seed?: MatchSeed): Match {
     listeners.forEach((listener) => listener(current))
   }
 
-  function end(reason: NonNullable<MatchSnapshot['endReason']>): void {
+  const end = (reason: NonNullable<MatchSnapshot['endReason']>): void => {
     phase = 'result'
     endReason = reason
     remainingSeconds = Math.max(remainingSeconds, 0)
   }
 
-  function offTheSand(x: number, y: number, radius: number): { x: number; y: number } {
+  const offTheSand = (x: number, y: number, radius: number): { x: number; y: number } => {
     let px = x
     let py = y
     for (const island of ISLANDS) {
@@ -157,16 +157,16 @@ export function createMatch(seed?: MatchSeed): Match {
     return { x: px, y: py }
   }
 
-  function hitsSand(x: number, y: number, radius: number): boolean {
+  const hitsSand = (x: number, y: number, radius: number): boolean => {
     return ISLANDS.some((island) => circleHitsRoundRect({ x, y, radius }, island, TILE_SIZE))
   }
 
-  function tryMove(
+  const tryMove = (
     body: { x: number; y: number; radius: number },
     nx: number,
     ny: number,
     around?: { id: number; goalX: number; goalY: number },
-  ): void {
+  ): void => {
     const radius = body.radius
     const clamped = clampToArena(nx, ny, radius, ARENA_WIDTH, ARENA_HEIGHT)
     if (!hitsSand(clamped.x, clamped.y, radius)) {
@@ -219,7 +219,7 @@ export function createMatch(seed?: MatchSeed): Match {
     body.y = fitted.y
   }
 
-  function update(dtSeconds: number, controls: HeldControls): MatchSnapshot {
+  const update = (dtSeconds: number, controls: HeldControls): MatchSnapshot => {
     if (phase !== 'playing') return snapshot()
     const elapsed = Math.max(dtSeconds, 0)
     const dt = Math.min(elapsed, 0.05)

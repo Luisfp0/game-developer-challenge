@@ -10,7 +10,7 @@ import {
 const sessionError = 'Game session time must be a whole number from 60 to 180.'
 const spawnError = 'Enemy spawn time must be a whole number from 5 to 30.'
 
-function memory() {
+const memory = () => {
   const data = new Map<string, string>()
   return {
     getItem(key: string) {

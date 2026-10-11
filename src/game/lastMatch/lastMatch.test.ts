@@ -16,7 +16,7 @@ const match: LastMatch = {
   playedAt: '2026-10-10T18:00:00.000Z',
 }
 
-function memory() {
+const memory = () => {
   const data = new Map<string, string>()
   return {
     getItem(key: string) {

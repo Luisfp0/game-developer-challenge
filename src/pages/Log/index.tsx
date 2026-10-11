@@ -15,7 +15,7 @@ type LogPageProps = {
   onBack: () => void
 }
 
-function playedAtLabel(playedAt: string): string {
+const playedAtLabel = (playedAt: string): string => {
   const date = new Date(playedAt)
   if (Number.isNaN(date.getTime())) return playedAt
   const month = date.toLocaleString('en-US', { month: 'short' }).toUpperCase()
@@ -25,22 +25,22 @@ function playedAtLabel(playedAt: string): string {
   return `${day} ${month} · ${hours}:${minutes}`
 }
 
-function durationLabel(seconds: number): string {
+const durationLabel = (seconds: number): string => {
   const total = Math.max(0, Math.round(seconds))
   const minutes = Math.floor(total / 60)
   const rest = total % 60
   return `${String(minutes).padStart(2, '0')}:${String(rest).padStart(2, '0')}`
 }
 
-function reasonLabel(endReason: MatchRecord['endReason']): string {
+const reasonLabel = (endReason: MatchRecord['endReason']): string => {
   return endReason === 'time' ? 'Time is up' : 'Destroyed'
 }
 
-function pageCountOf(total: number, pageSize: number): number {
+const pageCountOf = (total: number, pageSize: number): number => {
   return Math.max(1, Math.ceil(total / (pageSize || PAGE_SIZE)))
 }
 
-export function LogPage({ tab, onTab, onBack }: LogPageProps) {
+export const LogPage = ({ tab, onTab, onBack }: LogPageProps) => {
   const [player] = useState(() => readPlayer(localStorage, () => crypto.randomUUID()))
   const [config] = useState(() => readOptions(localStorage))
   const [rankingPage, setRankingPage] = useState(1)
@@ -84,7 +84,7 @@ export function LogPage({ tab, onTab, onBack }: LogPageProps) {
     })
   }, [history.data])
 
-  function retryPending(match: MatchRecord) {
+  const retryPending = (match: MatchRecord) => {
     setRetryingId(match.matchId)
     retry.mutate(match)
   }

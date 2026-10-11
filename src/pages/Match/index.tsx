@@ -18,7 +18,7 @@ type MatchPageProps = {
   onMainMenu: () => void
 }
 
-export function MatchPage({
+export const MatchPage = ({
   score,
   remainingSeconds,
   matchSeconds,
@@ -26,7 +26,7 @@ export function MatchPage({
   onSnapshot,
   onLoadError,
   onMainMenu,
-}: MatchPageProps) {
+}: MatchPageProps) => {
   const [paused, setPaused] = useState(false)
   const pausedRef = useRef(false)
   const keyboard = useKeyboard(pausedRef)
@@ -41,7 +41,7 @@ export function MatchPage({
     setPaused(true)
   }
 
-  function resume() {
+  const resume = () => {
     pausedRef.current = false
     setPaused(false)
   }

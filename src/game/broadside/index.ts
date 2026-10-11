@@ -5,11 +5,11 @@ export type VolleyShot = {
   vy: number
 }
 
-function facing(rotation: number) {
+const facing = (rotation: number) => {
   return { x: Math.sin(rotation), y: -Math.cos(rotation) }
 }
 
-export function sideVolley(args: {
+export const sideVolley = (args: {
   x: number
   y: number
   rotation: number
@@ -17,7 +17,7 @@ export function sideVolley(args: {
   muzzle: number
   spread: number
   speed: number
-}): VolleyShot[] {
+}): VolleyShot[] => {
   const along = facing(args.rotation)
   const sideDir =
     args.side === 'right'

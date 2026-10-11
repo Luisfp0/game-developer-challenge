@@ -14,7 +14,7 @@ const fireStyle = {
   userSelect: 'none' as const,
 }
 
-function holdButton(label: string, onHeld: (held: boolean) => void) {
+const holdButton = (label: string, onHeld: (held: boolean) => void) => {
   return (
     <button
       type="button"
@@ -33,11 +33,11 @@ function holdButton(label: string, onHeld: (held: boolean) => void) {
   )
 }
 
-export function TouchControls({ onStick, onFire, onFireLeft, onFireRight }: TouchControlsProps) {
+export const TouchControls = ({ onStick, onFire, onFireLeft, onFireRight }: TouchControlsProps) => {
   const padRef = useRef<HTMLDivElement>(null)
   const [knob, setKnob] = useState({ x: 0, y: 0 })
 
-  function pointFrom(event: PointerEvent<HTMLDivElement>) {
+  const pointFrom = (event: PointerEvent<HTMLDivElement>) => {
     const pad = padRef.current
     if (!pad) return
     const box = pad.getBoundingClientRect()
@@ -50,7 +50,7 @@ export function TouchControls({ onStick, onFire, onFireLeft, onFireRight }: Touc
     onStick(stickFromDrag(dx, dy, RADIUS))
   }
 
-  function releaseStick() {
+  const releaseStick = () => {
     setKnob({ x: 0, y: 0 })
     onStick(null)
   }

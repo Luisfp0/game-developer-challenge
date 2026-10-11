@@ -12,7 +12,7 @@ const SCENARIO_LABEL: Record<NetworkScenario, string> = {
   error: 'Error',
 }
 
-export function MainMenu({
+export const MainMenu = ({
   error,
   scenario,
   onPlay,
@@ -21,7 +21,7 @@ export function MainMenu({
   onHistory,
   onScenario,
   onResetRecords,
-}: MainMenuProps) {
+}: MainMenuProps) => {
   return (
     <MenuScreen
       panel={

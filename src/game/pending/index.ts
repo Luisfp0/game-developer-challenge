@@ -3,7 +3,7 @@ import { isMatchRecord, type MatchRecord } from '../records'
 
 export const PENDING_MATCHES_KEY = 'pirate-battle-pending-matches'
 
-export function readPending(storage: OptionsStorage): MatchRecord[] {
+export const readPending = (storage: OptionsStorage): MatchRecord[] => {
   const raw = storage.getItem(PENDING_MATCHES_KEY)
   if (raw === null) return []
   try {
@@ -15,7 +15,7 @@ export function readPending(storage: OptionsStorage): MatchRecord[] {
   }
 }
 
-export function savePending(storage: OptionsStorage, records: MatchRecord[]): boolean {
+export const savePending = (storage: OptionsStorage, records: MatchRecord[]): boolean => {
   try {
     storage.setItem(PENDING_MATCHES_KEY, JSON.stringify(records))
     return true
@@ -24,12 +24,12 @@ export function savePending(storage: OptionsStorage, records: MatchRecord[]): bo
   }
 }
 
-export function enqueuePending(storage: OptionsStorage, record: MatchRecord): boolean {
+export const enqueuePending = (storage: OptionsStorage, record: MatchRecord): boolean => {
   const pending = readPending(storage).filter((item) => item.matchId !== record.matchId)
   return savePending(storage, [record, ...pending])
 }
 
-export function dropPending(storage: OptionsStorage, matchId: string): boolean {
+export const dropPending = (storage: OptionsStorage, matchId: string): boolean => {
   return savePending(
     storage,
     readPending(storage).filter((item) => item.matchId !== matchId),

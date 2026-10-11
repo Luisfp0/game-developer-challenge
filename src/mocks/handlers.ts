@@ -7,7 +7,7 @@ import { confirmMatch, readAllMatches, writeConfirmed } from './store'
 const SLOW_MS = 1500
 const TIMEOUT_MS = 10000
 
-export function createHandlers(storage: OptionsStorage) {
+export const createHandlers = (storage: OptionsStorage) => {
   return [
     http.get('*/api/ranking', async ({ request }) => {
       const blocked = await blockedResponse(storage)
@@ -52,7 +52,7 @@ export function createHandlers(storage: OptionsStorage) {
   ]
 }
 
-async function blockedResponse(storage: OptionsStorage): Promise<Response | null> {
+const blockedResponse = async (storage: OptionsStorage): Promise<Response | null> => {
   const scenario = readScenario(storage)
   if (scenario === 'error') return HttpResponse.json({ message: 'unavailable' }, { status: 500 })
   if (scenario === 'timeout') await delay(TIMEOUT_MS)

@@ -6,7 +6,7 @@ import { createHandlers } from './handlers'
 import { writeScenario } from './scenarios'
 import { readConfirmed } from './store'
 
-function memory(): OptionsStorage {
+const memory = (): OptionsStorage => {
   const items = new Map<string, string>()
   return {
     getItem: (key) => items.get(key) ?? null,
@@ -16,7 +16,7 @@ function memory(): OptionsStorage {
   }
 }
 
-function record(overrides: Partial<MatchRecord> = {}): MatchRecord {
+const record = (overrides: Partial<MatchRecord> = {}): MatchRecord => {
   return {
     matchId: 'match-1',
     playerId: 'you',

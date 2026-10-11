@@ -6,7 +6,7 @@ import { queryClient } from './queryClient'
 import './components/ui/ui.css'
 import './index.css'
 
-function renderApp() {
+const renderApp = () => {
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>
@@ -16,7 +16,7 @@ function renderApp() {
   )
 }
 
-async function boot() {
+const boot = async () => {
   renderApp()
   try {
     const { worker } = await import('./mocks/browser')

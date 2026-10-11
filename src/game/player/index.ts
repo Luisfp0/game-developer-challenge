@@ -7,13 +7,13 @@ export type Player = {
   name: string
 }
 
-function isPlayer(value: unknown): value is Player {
+const isPlayer = (value: unknown): value is Player => {
   if (!value || typeof value !== 'object') return false
   const player = value as Record<string, unknown>
   return typeof player.id === 'string' && player.id.length > 0 && player.name === 'You'
 }
 
-export function readPlayer(storage: OptionsStorage, createId: () => string): Player {
+export const readPlayer = (storage: OptionsStorage, createId: () => string): Player => {
   try {
     const raw = storage.getItem(PLAYER_STORAGE_KEY)
     if (raw !== null) {

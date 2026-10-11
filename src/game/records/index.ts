@@ -28,7 +28,7 @@ export type MatchPage = {
   total: number
 }
 
-export function paginate(items: MatchRecord[], page: number, pageSize = PAGE_SIZE): MatchPage {
+export const paginate = (items: MatchRecord[], page: number, pageSize = PAGE_SIZE): MatchPage => {
   const safePage = Number.isInteger(page) && page > 0 ? page : 1
   const start = (safePage - 1) * pageSize
   return {
@@ -39,19 +39,19 @@ export function paginate(items: MatchRecord[], page: number, pageSize = PAGE_SIZ
   }
 }
 
-function byRank(left: MatchRecord, right: MatchRecord): number {
+const byRank = (left: MatchRecord, right: MatchRecord): number => {
   if (right.score !== left.score) return right.score - left.score
   if (right.timePlayedSeconds !== left.timePlayedSeconds) return right.timePlayedSeconds - left.timePlayedSeconds
   if (left.playedAt !== right.playedAt) return left.playedAt < right.playedAt ? -1 : 1
   return left.matchId < right.matchId ? -1 : left.matchId > right.matchId ? 1 : 0
 }
 
-function byRecent(left: MatchRecord, right: MatchRecord): number {
+const byRecent = (left: MatchRecord, right: MatchRecord): number => {
   if (left.playedAt !== right.playedAt) return left.playedAt > right.playedAt ? -1 : 1
   return left.matchId < right.matchId ? -1 : left.matchId > right.matchId ? 1 : 0
 }
 
-export function rankMatches(records: MatchRecord[], config: MatchConfig, page: number): MatchPage {
+export const rankMatches = (records: MatchRecord[], config: MatchConfig, page: number): MatchPage => {
   const same = records.filter(
     (record) =>
       record.matchSeconds === config.matchSeconds &&
@@ -60,16 +60,16 @@ export function rankMatches(records: MatchRecord[], config: MatchConfig, page: n
   return paginate([...same].sort(byRank), page)
 }
 
-export function listPlayerMatches(records: MatchRecord[], playerId: string, page: number): MatchPage {
+export const listPlayerMatches = (records: MatchRecord[], playerId: string, page: number): MatchPage => {
   const own = records.filter((record) => record.playerId === playerId)
   return paginate([...own].sort(byRecent), page)
 }
 
-function wholeInRange(value: unknown, min: number, max: number): value is number {
+const wholeInRange = (value: unknown, min: number, max: number): value is number => {
   return typeof value === 'number' && Number.isInteger(value) && value >= min && value <= max
 }
 
-export function isMatchRecord(value: unknown): value is MatchRecord {
+export const isMatchRecord = (value: unknown): value is MatchRecord => {
   if (!value || typeof value !== 'object') return false
   const record = value as Record<string, unknown>
   return (
@@ -93,10 +93,10 @@ export function isMatchRecord(value: unknown): value is MatchRecord {
   )
 }
 
-export function registerMatch(
+export const registerMatch = (
   records: MatchRecord[],
   incoming: MatchRecord,
-): { records: MatchRecord[]; record: MatchRecord; created: boolean } {
+): { records: MatchRecord[]; record: MatchRecord; created: boolean } => {
   const existing = records.find((record) => record.matchId === incoming.matchId)
   if (existing) return { records, record: existing, created: false }
   return { records: [incoming, ...records], record: incoming, created: true }

@@ -2,7 +2,7 @@ import { useEffect, useRef, type KeyboardEvent } from 'react'
 import { GoldButton } from '../ui'
 import type { PauseOverlayProps } from './types'
 
-export function PauseOverlay({ onResume, onMainMenu }: PauseOverlayProps) {
+export const PauseOverlay = ({ onResume, onMainMenu }: PauseOverlayProps) => {
   const resumeRef = useRef<HTMLButtonElement>(null)
   const menuRef = useRef<HTMLButtonElement>(null)
 
@@ -10,7 +10,7 @@ export function PauseOverlay({ onResume, onMainMenu }: PauseOverlayProps) {
     resumeRef.current?.focus()
   }, [])
 
-  function onKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key !== 'Tab') return
     const first = resumeRef.current
     const last = menuRef.current

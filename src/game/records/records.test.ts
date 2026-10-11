@@ -7,7 +7,7 @@ import {
   type MatchRecord,
 } from './index'
 
-function match(overrides: Partial<MatchRecord> = {}): MatchRecord {
+const match = (overrides: Partial<MatchRecord> = {}): MatchRecord => {
   return {
     matchId: 'match-1',
     playerId: 'you',

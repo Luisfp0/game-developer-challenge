@@ -11,7 +11,7 @@ export const SPAWN_POINTS = [
   { x: 96, y: 672 },
 ]
 
-export function spawnPoint(args: {
+export const spawnPoint = (args: {
   x: number
   y: number
   enemies: { x: number; y: number; alive: boolean }[]
@@ -21,7 +21,7 @@ export function spawnPoint(args: {
   shipRadius: number
   islands: { x: number; y: number; width: number; height: number }[]
   points?: { x: number; y: number }[]
-}): { x: number; y: number; nextIndex: number } | null {
+}): { x: number; y: number; nextIndex: number } | null => {
   const points = args.points ?? SPAWN_POINTS
   const count = points.length
   if (count === 0) return null

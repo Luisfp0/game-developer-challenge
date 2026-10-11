@@ -6,12 +6,12 @@ export const NETWORK_SCENARIOS = ['success', 'empty', 'slow', 'timeout', 'error'
 
 export type NetworkScenario = (typeof NETWORK_SCENARIOS)[number]
 
-export function readScenario(storage: OptionsStorage): NetworkScenario {
+export const readScenario = (storage: OptionsStorage): NetworkScenario => {
   const raw = storage.getItem(NETWORK_SCENARIO_KEY)
   if (raw && NETWORK_SCENARIOS.includes(raw as NetworkScenario)) return raw as NetworkScenario
   return 'success'
 }
 
-export function writeScenario(storage: OptionsStorage, scenario: NetworkScenario): void {
+export const writeScenario = (storage: OptionsStorage, scenario: NetworkScenario): void => {
   storage.setItem(NETWORK_SCENARIO_KEY, scenario)
 }

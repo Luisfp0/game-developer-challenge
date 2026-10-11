@@ -7,7 +7,7 @@ import { FIXTURES } from './fixtures'
 export const CONFIRMED_MATCHES_KEY = 'pirate-battle-confirmed-matches'
 export const HISTORY_MIGRATED_KEY = 'pirate-battle-history-migrated'
 
-export function readConfirmed(storage: OptionsStorage): MatchRecord[] {
+export const readConfirmed = (storage: OptionsStorage): MatchRecord[] => {
   const raw = storage.getItem(CONFIRMED_MATCHES_KEY)
   if (raw === null) return []
   try {
@@ -19,24 +19,24 @@ export function readConfirmed(storage: OptionsStorage): MatchRecord[] {
   }
 }
 
-export function writeConfirmed(storage: OptionsStorage, records: MatchRecord[]): void {
+export const writeConfirmed = (storage: OptionsStorage, records: MatchRecord[]): void => {
   storage.setItem(CONFIRMED_MATCHES_KEY, JSON.stringify(records))
 }
 
-export function readAllMatches(storage: OptionsStorage): MatchRecord[] {
+export const readAllMatches = (storage: OptionsStorage): MatchRecord[] => {
   const confirmed = readConfirmed(storage)
   const ids = new Set(confirmed.map((record) => record.matchId))
   return [...confirmed, ...FIXTURES.filter((record) => !ids.has(record.matchId))]
 }
 
-export function confirmMatch(storage: OptionsStorage, incoming: MatchRecord): MatchRecord {
+export const confirmMatch = (storage: OptionsStorage, incoming: MatchRecord): MatchRecord => {
   const confirmed = readConfirmed(storage)
   const result = registerMatch(confirmed, incoming)
   if (result.created) writeConfirmed(storage, result.records)
   return result.record
 }
 
-export function migrateSavedMatches(storage: OptionsStorage, player: Player, createId: () => string): void {
+export const migrateSavedMatches = (storage: OptionsStorage, player: Player, createId: () => string): void => {
   if (storage.getItem(HISTORY_MIGRATED_KEY) === '1') return
   let confirmed = readConfirmed(storage)
   for (const saved of readMatchHistory(storage)) {

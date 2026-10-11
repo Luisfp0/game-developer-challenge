@@ -22,7 +22,7 @@ describe('movement', () => {
     expect(ship.x).toBe(PLAYER_START.x)
   })
 
-  function staysOffTheSand(body: { x: number; y: number; radius: number }, island: (typeof ISLANDS)[number]) {
+  const staysOffTheSand = (body: { x: number; y: number; radius: number }, island: (typeof ISLANDS)[number]) => {
     expect(circleHitsRoundRect({ ...body, radius: body.radius - 1 }, island, TILE_SIZE)).toBe(false)
   }
 

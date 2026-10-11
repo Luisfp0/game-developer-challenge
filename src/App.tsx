@@ -15,7 +15,7 @@ import { MatchPage } from './pages/Match'
 import { OptionsPage } from './pages/Options'
 import type { MatchSnapshot, Phase, RegistrationStatus } from './types/game'
 
-export function App() {
+export const App = () => {
   const queryClient = useQueryClient()
   const [player] = useState(() => {
     const current = readPlayer(localStorage, () => crypto.randomUUID())
@@ -41,7 +41,7 @@ export function App() {
 
   useEffect(() => () => window.clearTimeout(toastTimer.current), [])
 
-  function showToast(message: string) {
+  const showToast = (message: string) => {
     window.clearTimeout(toastTimer.current)
     setToast(message)
     toastTimer.current = window.setTimeout(() => setToast(null), 2500)
@@ -60,7 +60,7 @@ export function App() {
     },
   })
 
-  function publish(snapshot: MatchSnapshot) {
+  const publish = (snapshot: MatchSnapshot) => {
     const record: MatchRecord = {
       matchId: crypto.randomUUID(),
       playerId: player.id,
@@ -78,13 +78,13 @@ export function App() {
     submit.mutate(record)
   }
 
-  function leaveMatch() {
+  const leaveMatch = () => {
     setScore(0)
     setResult(null)
     setPhase('menu')
   }
 
-  function play() {
+  const play = () => {
     const saved = readOptions(localStorage)
     reported.current = false
     activeRecord.current = null
@@ -98,13 +98,13 @@ export function App() {
     setPhase('playing')
   }
 
-  function changeScenario(next: NetworkScenario) {
+  const changeScenario = (next: NetworkScenario) => {
     writeScenario(localStorage, next)
     setScenario(next)
     void queryClient.invalidateQueries()
   }
 
-  function resetSavedRecords() {
+  const resetSavedRecords = () => {
     void resetRecords()
       .then(() => {
         localStorage.removeItem(PENDING_MATCHES_KEY)

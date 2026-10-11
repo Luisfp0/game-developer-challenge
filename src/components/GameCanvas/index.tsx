@@ -3,60 +3,16 @@ import { Application, Assets, Container, Graphics, Sprite, Texture } from 'pixi.
 import { ASSET_URLS } from '../../constants/assets'
 import { ARENA_HEIGHT, ARENA_WIDTH, ISLANDS, TILE_SIZE } from '../../constants/gameConfig'
 import { fittedArenaSize } from '../../game/canvas'
-import { hullFlames } from '../../game/effects'
 import { appliedSeconds } from '../../game/pause'
 import { controlsFromTouch } from '../../game/touch'
 import { createMatch } from '../../game/simulation'
 import { mergeControls } from '../../hooks/useKeyboard'
 import type { MatchSnapshot } from '../../types/game'
-import type { GameCanvasProps } from './types'
+import type { BurstKind, Flames, GameCanvasProps, HealthBar } from './types'
+import { BAR_SCALE, EXPLODE_SECONDS } from './constants'
+import { attachFlames, burstLife, burstScale, showFlames } from './utils'
 
-const BAR_SCALE = 0.35
-const SHOT_SECONDS = 0.15
-const HIT_SECONDS = 0.15
-const EXPLODE_SECONDS = 0.4
-
-type BurstKind = 'shot' | 'hit' | 'explode'
-type Flames = { one: Sprite; two: Sprite }
-
-function burstLife(kind: BurstKind): number {
-  if (kind === 'explode') return EXPLODE_SECONDS
-  if (kind === 'hit') return HIT_SECONDS
-  return SHOT_SECONDS
-}
-
-function burstScale(kind: BurstKind): number {
-  if (kind === 'shot') return 0.45
-  if (kind === 'hit') return 0.7
-  return 1
-}
-
-function attachFlames(ship: Sprite, fire1: Texture, fire2: Texture): Flames {
-  const one = new Sprite(fire1)
-  const two = new Sprite(fire2)
-  one.anchor.set(0.5)
-  two.anchor.set(0.5)
-  one.position.set(0, 22)
-  two.position.set(-12, 30)
-  one.visible = false
-  two.visible = false
-  ship.addChild(one, two)
-  return { one, two }
-}
-
-function showFlames(flames: Flames, health: number, maxHealth: number): void {
-  const count = hullFlames(health, maxHealth)
-  flames.one.visible = count >= 1
-  flames.two.visible = count >= 2
-}
-
-type HealthBar = {
-  view: Container
-  width: number
-  setRatio: (ratio: number) => void
-}
-
-function opaqueInset(texture: Texture): { x: number; y: number; width: number; height: number } {
+const opaqueInset = (texture: Texture): { x: number; y: number; width: number; height: number } => {
   const width = texture.width
   const height = texture.height
   const full = { x: 0, y: 0, width, height }
@@ -86,7 +42,7 @@ function opaqueInset(texture: Texture): { x: number; y: number; width: number; h
   return { x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1 }
 }
 
-function healthBar(frame: Texture, fill: Texture): HealthBar {
+const healthBar = (frame: Texture, fill: Texture): HealthBar => {
   const view = new Container()
   const frameSprite = new Sprite(frame)
   const fillSprite = new Sprite(fill)
@@ -107,7 +63,7 @@ function healthBar(frame: Texture, fill: Texture): HealthBar {
   return { view, width: frame.width * BAR_SCALE, setRatio }
 }
 
-export function GameCanvas({
+export const GameCanvas = ({
   onSnapshot,
   onLoadError,
   pausedRef,
@@ -115,7 +71,7 @@ export function GameCanvas({
   touchRef,
   matchSeconds,
   spawnIntervalSeconds,
-}: GameCanvasProps) {
+}: GameCanvasProps) => {
   const hostRef = useRef<HTMLDivElement>(null)
   const onSnapshotRef = useRef(onSnapshot)
   const onLoadErrorRef = useRef(onLoadError)
@@ -135,14 +91,14 @@ export function GameCanvas({
     let stop = () => {}
     let observer: ResizeObserver | null = null
 
-    function fit(canvas: HTMLCanvasElement) {
+    const fit = (canvas: HTMLCanvasElement) => {
       const box = host!.getBoundingClientRect()
       const size = fittedArenaSize(box.width, box.height, ARENA_WIDTH, ARENA_HEIGHT)
       canvas.style.width = `${size.width}px`
       canvas.style.height = `${size.height}px`
     }
 
-    async function start() {
+    const start = async () => {
       const next = new Application()
       try {
         await next.init({
@@ -241,7 +197,7 @@ export function GameCanvas({
       const bursts: { sprite: Sprite; kind: BurstKind; age: number }[] = []
       world.addChild(player, ...shots, playerBar.view, effects)
 
-      function spawnBurst(x: number, y: number, kind: BurstKind) {
+      const spawnBurst = (x: number, y: number, kind: BurstKind) => {
         let sprite = burstPool.find((item) => !item.visible)
         if (!sprite) {
           sprite = new Sprite(explosionTextures[0])
@@ -256,7 +212,7 @@ export function GameCanvas({
         bursts.push({ sprite, kind, age: 0 })
       }
 
-      function tickBursts(dt: number) {
+      const tickBursts = (dt: number) => {
         for (let index = bursts.length - 1; index >= 0; index -= 1) {
           const burst = bursts[index]
           burst.age += dt

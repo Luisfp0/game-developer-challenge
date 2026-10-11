@@ -7,17 +7,17 @@ type GoldButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   compact?: boolean
 }
 
-export const GoldButton = forwardRef<HTMLButtonElement, GoldButtonProps>(function GoldButton(
+export const GoldButton = forwardRef<HTMLButtonElement, GoldButtonProps>((
   { variant = 'primary', compact = false, className = '', ...props },
   ref,
-) {
+) => {
   const classes = ['gold-button', variant === 'secondary' ? 'secondary' : '', compact ? 'compact' : '', className]
     .filter(Boolean)
     .join(' ')
   return <button ref={ref} className={classes} {...props} />
 })
 
-export function Screen({ children, wide = false }: { children: ReactNode; wide?: boolean }) {
+export const Screen = ({ children, wide = false }: { children: ReactNode; wide?: boolean }) => {
   return (
     <div className="screen">
       <div className={wide ? 'panel panel-wide' : 'panel'}>{children}</div>
@@ -25,7 +25,7 @@ export function Screen({ children, wide = false }: { children: ReactNode; wide?:
   )
 }
 
-export function MenuScreen({ panel, below }: { panel: ReactNode; below?: ReactNode }) {
+export const MenuScreen = ({ panel, below }: { panel: ReactNode; below?: ReactNode }) => {
   return (
     <div className="screen">
       <div className="menu-stack">
@@ -47,7 +47,7 @@ type NumberStepperProps = {
   onChange: (value: string) => void
 }
 
-export function NumberStepper({ id, label, value, min, max, step, error, onChange }: NumberStepperProps) {
+export const NumberStepper = ({ id, label, value, min, max, step, error, onChange }: NumberStepperProps) => {
   const current = /^\d+$/.test(value.trim()) ? Number(value.trim()) : null
   return (
     <div className="field">
@@ -94,7 +94,7 @@ type SelectFieldProps = SelectHTMLAttributes<HTMLSelectElement> & {
   label: string
 }
 
-export function SelectField({ id, label, children, ...props }: SelectFieldProps) {
+export const SelectField = ({ id, label, children, ...props }: SelectFieldProps) => {
   return (
     <div className="field">
       <label htmlFor={id}>{label}</label>
@@ -105,7 +105,7 @@ export function SelectField({ id, label, children, ...props }: SelectFieldProps)
   )
 }
 
-export function Toast({ message }: { message: string | null }) {
+export const Toast = ({ message }: { message: string | null }) => {
   if (!message) return null
   return (
     <p className="toast" role="status">

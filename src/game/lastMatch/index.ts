@@ -17,11 +17,11 @@ export type LastMatch = {
   playedAt: string
 }
 
-function wholeInRange(value: unknown, min: number, max: number): value is number {
+const wholeInRange = (value: unknown, min: number, max: number): value is number => {
   return typeof value === 'number' && Number.isInteger(value) && value >= min && value <= max
 }
 
-function isLastMatch(value: unknown): value is LastMatch {
+const isLastMatch = (value: unknown): value is LastMatch => {
   if (!value || typeof value !== 'object') return false
   const record = value as Record<string, unknown>
   return (
@@ -43,7 +43,7 @@ function isLastMatch(value: unknown): value is LastMatch {
   )
 }
 
-function copyMatch(match: LastMatch): LastMatch {
+const copyMatch = (match: LastMatch): LastMatch => {
   return {
     score: match.score,
     timePlayedSeconds: match.timePlayedSeconds,
@@ -54,7 +54,7 @@ function copyMatch(match: LastMatch): LastMatch {
   }
 }
 
-export function readMatchHistory(storage: OptionsStorage): LastMatch[] {
+export const readMatchHistory = (storage: OptionsStorage): LastMatch[] => {
   const raw = storage.getItem(LAST_MATCH_STORAGE_KEY)
   if (raw === null) return []
   try {
@@ -66,11 +66,11 @@ export function readMatchHistory(storage: OptionsStorage): LastMatch[] {
   }
 }
 
-export function readLastMatch(storage: OptionsStorage): LastMatch | null {
+export const readLastMatch = (storage: OptionsStorage): LastMatch | null => {
   return readMatchHistory(storage)[0] ?? null
 }
 
-export function writeLastMatch(storage: OptionsStorage, match: LastMatch): boolean {
+export const writeLastMatch = (storage: OptionsStorage, match: LastMatch): boolean => {
   if (!isLastMatch(match)) return false
   try {
     const history = [copyMatch(match), ...readMatchHistory(storage)].slice(0, MATCH_HISTORY_LIMIT)
