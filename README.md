@@ -82,3 +82,38 @@ Para ver uma falha: escolha **Error** ou **Timeout**, abra **Ranking** ou **Matc
 Uma partida concluída aparece como **Pending.** e depois **Saved.** ou **Could not be saved.** O botão **Try again** reenvia o mesmo registro. Um segundo envio com o mesmo `matchId` não duplica a partida. Se o envio falha, o registro permanece em `pirate-battle-pending-matches` e é tentado de novo ao reabrir o jogo.
 
 Os registros confirmados ficam em `pirate-battle-confirmed-matches`.
+
+## Performance
+
+Medido no build de produção, com `npm run preview`, nesta máquina:
+
+- Intel Core i5-7400, 4 núcleos, 3,0 GHz, 23 GB de RAM
+- Monitor 3440×1440 a 85 Hz, `devicePixelRatio` 1
+- Chrome 148, no navegador do Cursor
+- Partida de 180 segundos, inimigo a cada 10 segundos
+
+Um script pilotou o navio e atirou durante os três minutos. Para a amostra não acabar nos primeiros segundos, a vida inicial dessa medição foi 120, no lugar de 3. As outras regras ficaram as da partida normal. O tempo acabou com 79 de vida e 11 pontos. O pico já tinha aparecido bem antes do fim: 3 navios, contando o jogador e os inimigos vivos, e 9 projéteis.
+
+| Medida | Valor |
+| --- | ---: |
+| Quadros | 15.015 |
+| FPS médio | 84,7 |
+| Intervalo médio | 11,8 ms |
+| Percentil 95 | 11,9 ms |
+| Percentil 99 | 11,9 ms |
+| Maior intervalo | 35,4 ms |
+| Quadros acima de 20 ms | 33 |
+
+O alvo de 60 FPS é um quadro a cada 16,7 ms. O percentil 95 ficou em 11,9 ms. Os 84,7 FPS são o teto da tela de 85 Hz.
+
+A memória foi outra sessão, com a vida normal de 3. Cinco ciclos de entrar, jogar cerca de 20 segundos e voltar ao menu. O heap foi lido depois de forçar a coleta de lixo.
+
+| Momento | Heap JS |
+| --- | ---: |
+| Menu, antes de jogar | 3,8 MB |
+| Depois do primeiro ciclo | 6,3 MB |
+| Depois do quinto ciclo | 6,5 MB |
+
+O primeiro ciclo sobe porque as imagens da partida ficam decodificadas. Os quatro seguintes acrescentaram cerca de 0,1 MB. Nós do DOM e listeners ficaram iguais. Não houve crescimento contínuo ao sair da partida.
+
+A medição é de um computador só, no navegador embutido, e a vida usada nos três minutos não é a da partida normal.
